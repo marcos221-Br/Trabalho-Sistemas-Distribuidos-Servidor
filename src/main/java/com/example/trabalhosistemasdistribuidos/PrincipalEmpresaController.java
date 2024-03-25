@@ -47,11 +47,6 @@ public class PrincipalEmpresaController {
         setTela("Candidato");
     }
 
-    @FXML
-    void deslogar(ActionEvent event) {
-        ClientApplication.trocarTela("Login");
-    }
-
     //Eventos de teclado
     @FXML
     void telas(KeyEvent event) {
@@ -66,9 +61,6 @@ public class PrincipalEmpresaController {
         }
         if(event.getCode() == KeyCode.F4){
             cadastrarVaga(null);
-        }
-        if(event.getCode() == KeyCode.ESCAPE){
-            deslogar(null);
         }
     }
 

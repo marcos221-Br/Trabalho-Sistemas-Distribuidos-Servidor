@@ -42,11 +42,6 @@ public class PrincipalCandidatoController {
         setTela("Candidato");
     }
 
-    @FXML
-    void deslogar(ActionEvent event) {
-        ClientApplication.trocarTela("Login");
-    }
-
     //Eventos de teclado
     @FXML
     void telas(KeyEvent event) {
@@ -58,9 +53,6 @@ public class PrincipalCandidatoController {
         }
         if(event.getCode() == KeyCode.F4){
             CadastrarCompetencia(null);
-        }
-        if(event.getCode() == KeyCode.ESCAPE){
-            deslogar(null);
         }
     }
 

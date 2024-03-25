@@ -50,7 +50,6 @@ public class LoginController {
                 ClientApplication.escreverLog("Login: " + login.getText());
                 login.setText("");
                 senha.setText("");
-                ClientApplication.trocarTela("PrincipalEmpresa");
             }else{
                 System.out.println("Usuário ou senha errados");
                 excecao.setText("Usuário ou senha incorreta!");
@@ -78,7 +77,6 @@ public class LoginController {
                 ClientApplication.escreverLog("Login: " + login.getText());
                 login.setText("");
                 senha.setText("");
-                ClientApplication.trocarTela("PrincipalCandidato");
             }else{
                 System.out.println("Usuário ou senha errados");
                 excecao.setText("Usuário ou senha incorreta!");
@@ -95,14 +93,12 @@ public class LoginController {
     void cadastrarCandidato(ActionEvent event) {
         login.setText("");
         senha.setText("");
-        ClientApplication.trocarTela("CadastrarCandidato");
     }
 
     @FXML
     void cadastrarEmpresa(ActionEvent event) {
         login.setText("");
         senha.setText("");
-        ClientApplication.trocarTela("CadastrarEmpresa");
     }
 
     @FXML

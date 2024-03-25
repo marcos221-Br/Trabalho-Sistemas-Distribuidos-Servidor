@@ -69,11 +69,6 @@ public class CadastrarCandidatoController {
     }
 
     @FXML
-    void voltarLogin(ActionEvent event) {
-        ClientApplication.trocarTela("Login");
-    }
-
-    @FXML
     void initialize() {
         jpa = new UsuarioDAO();
     }
