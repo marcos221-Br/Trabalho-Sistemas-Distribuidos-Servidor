@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.paint.Color?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.trabalhosistemasdistribuidos.LoginController">
+   <bottom>
+      <HBox alignment="CENTER" prefHeight="129.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+         <children>
+            <Button fx:id="entrarEmpresa" mnemonicParsing="false" onAction="#entrarEmpresa" prefHeight="37.0" prefWidth="150.0" style="-fx-background-color: #04BF8A;" text="Entrar Empresa" textAlignment="CENTER" textFill="WHITE" wrapText="true">
+               <font>
+                  <Font name="Poppins Bold" size="16.0" />
+               </font>
+               <effect>
+                  <DropShadow>
+                     <color>
+                        <Color opacity="0.3738601803779602" />
+                     </color>
+                  </DropShadow>
+               </effect>
+               <HBox.margin>
+                  <Insets right="20.0" />
+               </HBox.margin>
+            </Button>
+            <Button fx:id="entrarCandidato" mnemonicParsing="false" onAction="#entrarCandidato" prefHeight="37.0" prefWidth="150.0" style="-fx-background-color: #04BF8A;" text="Entrar Candidato" textAlignment="CENTER" textFill="WHITE" wrapText="true">
+               <effect>
+                  <DropShadow />
+               </effect>
+               <font>
+                  <Font size="16.0" />
+               </font>
+               <HBox.margin>
+                  <Insets right="20.0" />
+               </HBox.margin>
+            </Button>
+
+         </children>
+      </HBox>
+   </bottom>
+   <center>
+      <VBox prefHeight="160.0" prefWidth="563.0" BorderPane.alignment="CENTER">
+         <children>
+            <Label alignment="CENTER" prefHeight="26.0" prefWidth="46.0" text="E-mail" textAlignment="CENTER">
+               <font>
+                  <Font name="Poppins Medium" size="16.0" />
+               </font>
+               <VBox.margin>
+                  <Insets left="100.0" />
+               </VBox.margin>
+            </Label>
+            <TextField fx:id="login" prefHeight="34.0" prefWidth="50.0" promptText="E-mail de usuário" style="-fx-pref-width: 100;">
+               <padding>
+                  <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+               </padding>
+               <VBox.margin>
+                  <Insets bottom="12.0" left="100.0" right="100.0" />
+               </VBox.margin>
+            </TextField>
+            <Label alignment="CENTER" prefHeight="26.0" prefWidth="51.0" text="Senha" textAlignment="CENTER">
+               <font>
+                  <Font name="Poppins Medium" size="16.0" />
+               </font>
+               <VBox.margin>
+                  <Insets left="100.0" />
+               </VBox.margin>
+            </Label>
+            <PasswordField fx:id="senha" prefHeight="26.0" prefWidth="80.0" promptText="Senha">
+               <padding>
+                  <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+               </padding>
+               <VBox.margin>
+                  <Insets bottom="12.0" left="100.0" right="100.0" />
+               </VBox.margin>
+            </PasswordField>
+            <HBox prefHeight="100.0" prefWidth="200.0" spacing="50.0">
+               <children>
+                  <Hyperlink fx:id="cadEmpresa" onAction="#cadastrarEmpresa" text="Cadastrar Empresa" />
+                  <Hyperlink fx:id="cadCandidato" onAction="#cadastrarCandidato" text="Cadastrar Candidato">
+                     <HBox.margin>
+                        <Insets left="25.0" />
+                     </HBox.margin>
+                  </Hyperlink>
+               </children>
+               <VBox.margin>
+                  <Insets left="150.0" right="150.0" />
+               </VBox.margin>
+            </HBox>
+            <Label fx:id="excecao" text="Label" visible="false" />
+         </children>
+      </VBox>
+   </center>
+   <top>
+      <VBox alignment="CENTER" prefHeight="115.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+         <children>
+            <Label id="entrar" prefHeight="34.0" prefWidth="76.0" text="Entrar">
+               <font>
+                  <Font name="Poppins Bold" size="23.0" />
+               </font>
+            </Label>
+            <Label prefHeight="34.0" prefWidth="249.0" text="Olá, vamos começar!">
+               <font>
+                  <Font name="Poppins Light" size="23.0" />
+               </font>
+            </Label>
+         </children>
+      </VBox>
+   </top>
+</BorderPane>
