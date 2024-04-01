@@ -7,19 +7,19 @@ import javafx.stage.Stage;
 import javafx.scene.Parent;
 import java.io.IOException;
 
-public class ClientApplication extends Application {
+public class ServerApplication extends Application {
     private static Stage stage;
-    private static Scene login;
+    private static Scene server;
 
     @Override
     public void start(Stage primaryStage) throws IOException {
         stage = primaryStage;
-        primaryStage.setTitle("Portal de Vagas");
+        primaryStage.setTitle("Portal de Vagas - Servidor");
 
-        Parent fxmlLogin = FXMLLoader.load(getClass().getResource("Login.fxml"));
-        login = new Scene(fxmlLogin);
+        Parent fxmlServer = FXMLLoader.load(getClass().getResource("Server.fxml"));
+        server = new Scene(fxmlServer);
 
-        primaryStage.setScene(login);
+        primaryStage.setScene(server);
         primaryStage.show();
     }
 
