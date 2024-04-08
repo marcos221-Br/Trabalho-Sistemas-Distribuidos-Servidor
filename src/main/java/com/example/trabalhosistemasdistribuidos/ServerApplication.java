@@ -8,11 +8,12 @@ import javafx.scene.Parent;
 import java.io.IOException;
 
 public class ServerApplication extends Application {
+    @SuppressWarnings("unused")
     private static Stage stage;
     private static Scene server;
 
     @Override
-    public void start(Stage primaryStage) throws IOException {
+    public void start(@SuppressWarnings("exports") Stage primaryStage) throws IOException {
         stage = primaryStage;
         primaryStage.setTitle("Portal de Vagas - Servidor");
 
