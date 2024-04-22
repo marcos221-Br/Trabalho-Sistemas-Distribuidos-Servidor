@@ -9,7 +9,7 @@ public class Banco {
         String user = "postgres";
         String senha = "84627913";
         //String database = "teste"; //Utilizado para testes
-        String database = "trabalhoidosoremedio";
+        String database = "sistemasdistribuidos";
 
         Connection con = null;
         Statement stat = null;

@@ -9,13 +9,13 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaQuery;
 
-import com.example.trabalhosistemasdistribuidos.modelo.Usuario;
+import com.example.trabalhosistemasdistribuidos.modelo.Candidato;
 
-public class UsuarioJPAController implements Serializable{
+public class CandidatoJPAController implements Serializable{
     
     private EntityManagerFactory emf = null;
 
-    public UsuarioJPAController(EntityManagerFactory emf){
+    public CandidatoJPAController(EntityManagerFactory emf){
         this.emf = emf;
     }
 
@@ -23,25 +23,25 @@ public class UsuarioJPAController implements Serializable{
         return emf.createEntityManager();
     }
 
-    public Usuario encontrarUsuario(int matricula){
+    public Candidato encontrarCandidato(int idCandidato){
         EntityManager em = getEntityManager();
         try{
-            return em.find(Usuario.class, matricula);
+            return em.find(Candidato.class, idCandidato);
         }finally{
             em.close();
         }
     }
 
-    public void criar(Usuario usuario) throws Exception{
+    public void criar(Candidato candidato) throws Exception{
         EntityManager em = null;
         try{
             em = getEntityManager();
             em.getTransaction().begin();
-            em.persist(usuario);
+            em.persist(candidato);
             em.getTransaction().commit();
         }catch (Exception ex){
-            if(encontrarUsuario(usuario.getMatricula()) != null){
-                throw new Exception("Usuário " + usuario + " já existente.",ex);
+            if(encontrarCandidato(candidato.getIdCandidato()) != null){
+                throw new Exception("Candidato " + candidato + " já existente.",ex);
             }
             throw ex;
         }finally{
@@ -51,18 +51,18 @@ public class UsuarioJPAController implements Serializable{
         }
     }
 
-    public void editar(Usuario usuario) throws Exception{
+    public void editar(Candidato candidato) throws Exception{
         EntityManager em = null;
         try{
             em = getEntityManager();
             em.getTransaction().begin();
-            usuario = em.merge(usuario);
+            candidato = em.merge(candidato);
             em.getTransaction().commit();
         }catch(Exception ex){
             String msg = ex.getLocalizedMessage();
             if(msg == null || msg.length() == 0){
-                int matricula = usuario.getMatricula();
-                if(encontrarUsuario(matricula) == null){
+                int matricula = candidato.getIdCandidato();
+                if(encontrarCandidato(matricula) == null){
                     throw new Exception("O produto com matrícula " + matricula + " não existe.");
                 }
             }
@@ -74,19 +74,19 @@ public class UsuarioJPAController implements Serializable{
         }
     }
 
-    public void deletar(int matricula) throws Exception{
+    public void deletar(int idCandidato) throws Exception{
         EntityManager em = null;
         try{
             em = getEntityManager();
             em.getTransaction().begin();
-            Usuario usuario;
+            Candidato candidato;
             try{
-                usuario = em.getReference(Usuario.class, matricula);
-                usuario.getMatricula();
+                candidato = em.getReference(Candidato.class, idCandidato);
+                candidato.getIdCandidato();
             }catch(EntityNotFoundException enfe){
-                throw new Exception("O usuario com matricula " + matricula + " não existe.",enfe);
+                throw new Exception("O usuario com matricula " + idCandidato + " não existe.",enfe);
             }
-            em.remove(usuario);
+            em.remove(candidato);
             em.getTransaction().commit();
         }finally{
             if(em != null){
@@ -95,11 +95,11 @@ public class UsuarioJPAController implements Serializable{
         }
     }
 
-    private List<Usuario> encontrarEntidadesUsuario(boolean tudo, int maximoResultados, int primeiroResultado){
+    private List<Candidato> encontrarEntidadesCandidato(boolean tudo, int maximoResultados, int primeiroResultado){
         EntityManager em = getEntityManager();
         try{
             CriteriaQuery cq = em.getCriteriaBuilder().createQuery();
-            cq.select(cq.from(Usuario.class));
+            cq.select(cq.from(Candidato.class));
             Query q = em.createQuery(cq);
             if(!tudo){
                 q.setMaxResults(maximoResultados);
@@ -111,20 +111,20 @@ public class UsuarioJPAController implements Serializable{
         }
     }
 
-    public List<Usuario> encontrarEntidadesUsuario(int maximoResultados, int primeiroResultado){
-        return encontrarEntidadesUsuario(false,maximoResultados,primeiroResultado);
+    public List<Candidato> encontrarEntidadesCandidato(int maximoResultados, int primeiroResultado){
+        return encontrarEntidadesCandidato(false,maximoResultados,primeiroResultado);
     }
 
-    public List<Usuario> encontrarEntidadesUsuario(){
-        return encontrarEntidadesUsuario(true, -1, -1);
+    public List<Candidato> encontrarEntidadesCandidato(){
+        return encontrarEntidadesCandidato(true, -1, -1);
     }
 
-    public Usuario encontrarUsuarioLogin(String login){
+    public Candidato encontrarCandidatoLogin(String email){
         EntityManager em = getEntityManager();
         try{
-            return em.createQuery("SELECT u FROM Usuario u WHERE u.login = :login", Usuario.class).setParameter("login", login).getSingleResult();
+            return em.createQuery("SELECT u FROM Candidato u WHERE u.email = :email", Candidato.class).setParameter("email", email).getSingleResult();
         }catch(NoResultException NRE){
-            System.out.println("Usuário não encontrado");
+            System.out.println("Candidato não encontrado");
             return null;
         }finally{
             em.close();

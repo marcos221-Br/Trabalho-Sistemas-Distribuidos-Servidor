@@ -1,6 +1,13 @@
 package com.example.trabalhosistemasdistribuidos;
 
 import java.net.*;
+
+import org.json.JSONObject;
+
+import com.example.trabalhosistemasdistribuidos.banco.CandidatoDAO;
+import com.example.trabalhosistemasdistribuidos.modelo.Candidato;
+import com.example.trabalhosistemasdistribuidos.modelo.Login;
+
 import java.io.*;
 
 public class SocketServer{
@@ -32,18 +39,22 @@ public class SocketServer{
                     public void run(){
                         ToJson jsonRecebido;
                         ToJson jsonEnviado;
+                        TokenGenerator token;
+                        Candidato candidato;
+                        CandidatoDAO jpaCandidato;
                         ip = clienteSocket.getInetAddress().getHostAddress();
                         System.out.println("Conexão com: " + ip);
                         jsonRecebido = new ToJson();
                         try{
+                            token = new TokenGenerator();
                             PrintWriter output = new PrintWriter(clienteSocket.getOutputStream(), true);
                             BufferedReader in = new BufferedReader(new InputStreamReader( clienteSocket.getInputStream()));
-   
+
                             String inputLine;
 
-                            while ((inputLine = in.readLine()) != null){
+                            while ((inputLine = (String) in.readLine()) != null){
                                 System.out.println(ip + " enviou: " + inputLine);
-                                jsonRecebido.setJson(inputLine);
+                                jsonRecebido.setJson(new JSONObject(inputLine));
                                 switch (jsonRecebido.getOperacao()) {
                                     case "loginEmpresa":
                                         if((jsonRecebido.getFuncao("email").equals("marcosartemio221@gmail.com")) && 
@@ -61,10 +72,13 @@ public class SocketServer{
                                         break;
                                     
                                     case "loginCandidato":
-                                        if((jsonRecebido.getFuncao("email").equals("marcosartemio221@gmail.com")) && 
-                                            (jsonRecebido.getFuncao("senha").equals("67890"))){
+                                        Login login;
+                                        login = new Login();
+                                        login.setLogin(jsonRecebido.getFuncao("email"));
+                                        login.setSenha(jsonRecebido.getFuncao("senha"));
+                                        if(login.buscar()){
                                             String[] funcoes = {"status","token"};
-                                            String[] valores = {"200","abcdefghijklmnopqrstuvwxyz"};
+                                            String[] valores = {"200",token.createToken(login.getLogin())};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
                                         }else{
                                             String[] funcoes = {"status","mensagem"};
@@ -76,15 +90,20 @@ public class SocketServer{
                                         break;
                                     
                                     case "logout":
-                                        String logout = "{\"operacao\":\"logout\",\"status\":\"204\"}";
-                                        System.out.println("Enviado: " + logout + " para " + ip);
-                                        output.println(logout);
+                                        String[] funcao = {"status"};
+                                        String[] valor = {"204"};
+                                        jsonEnviado = new ToJson("logout",funcao,valor);
+                                        System.out.println("Enviado: " + jsonEnviado.getJson() + " para " + ip);
+                                        output.println(jsonEnviado.getJson());
                                         break;
                                     
                                     case "visualizarCandidato":
-                                        if(jsonRecebido.getFuncao("email").equals("marcosartemio221@gmail.com")){
+                                        candidato = new Candidato(jsonRecebido.getFuncao("email"));
+                                        jpaCandidato = new CandidatoDAO();
+                                        candidato = jpaCandidato.buscarIdCandidato(candidato);
+                                        if(candidato != null){
                                             String[] funcoes = {"status","nome","senha"};
-                                            String[] valores = {"201","Marcos Artêmio Gomes dos Santos","67890"};
+                                            String[] valores = {"201",candidato.getNome(),candidato.getSenha()+""};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
                                         }else{
                                             String[] funcoes = {"status","mensagem"};
@@ -96,11 +115,15 @@ public class SocketServer{
                                         break;
 
                                     case "apagarCandidato":
-                                        if(jsonRecebido.getFuncao("email").equals("marcosartemio221@gmail.com")){
+                                        candidato = new Candidato(jsonRecebido.getFuncao("email"));
+                                        jpaCandidato = new CandidatoDAO();
+                                        candidato = jpaCandidato.buscarIdCandidato(candidato);
+                                        try{
+                                            jpaCandidato.excluir(candidato);
                                             String[] funcoes = {"status"};
                                             String[] valores = {"201"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
-                                        }else{
+                                        }catch(Exception e){
                                             String[] funcoes = {"status","mensagem"};
                                             String[] valores = {"404","E-mail não encontrado"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
@@ -110,11 +133,17 @@ public class SocketServer{
                                         break;
 
                                     case "atualizarCandidato":
-                                        if(jsonRecebido.getFuncao("email").equals("marcosartemio@gmail.com")){
+                                        candidato = new Candidato(jsonRecebido.getFuncao("email"));
+                                        jpaCandidato = new CandidatoDAO();
+                                        candidato = jpaCandidato.buscarIdCandidato(candidato);
+                                        candidato.setNome(jsonRecebido.getFuncao("nome"));
+                                        candidato.setSenha(Integer.parseInt(jsonRecebido.getFuncao("senha")));
+                                        try{
+                                            jpaCandidato.editar(candidato);
                                             String[] funcoes = {"status"};
                                             String[] valores = {"201"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
-                                        }else{
+                                        }catch(Exception e){
                                             String[] funcoes = {"status","mensagem"};
                                             String[] valores = {"404","E-mail não encontrado"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
@@ -124,18 +153,34 @@ public class SocketServer{
                                         break;
 
                                     case "cadastrarCandidato":
-                                        if(jsonRecebido.getFuncao("email").equals("marcosartemio221@gmail.com")){
+                                        candidato = new Candidato(jsonRecebido.getFuncao("email"),Integer.parseInt(jsonRecebido.getFuncao("senha")));
+                                        jpaCandidato = new CandidatoDAO();
+                                        candidato = jpaCandidato.buscarIdCandidato(candidato);
+                                        if(candidato != null){
                                             String[] funcoes = {"status","mensagem"};
                                             String[] valores = {"422","E-mail já cadastrado"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(), funcoes, valores);
-                                        }else if(jsonRecebido.getFuncao("nome").equals("Marcos")){
-                                            String[] funcoes = {"status","mensagem"};
-                                            String[] valores = {"404",""};
-                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
                                         }else{
-                                            String[] funcoes = {"status","token"};
-                                            String[] valores = {"201","abcdefghijklmnopqrstuwxyz"};
-                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            try{
+                                                candidato = new Candidato(jsonRecebido.getFuncao("email"), Integer.parseInt(jsonRecebido.getFuncao("senha")));
+                                                candidato.setNome(jsonRecebido.getFuncao("nome"));
+                                                int totalCandidato = 0;
+                                                for(Candidato candidatoFor : jpaCandidato.buscarTodos()){
+                                                    if(candidatoFor != null){
+                                                        totalCandidato = candidatoFor.getIdCandidato();
+                                                    }
+                                                }
+                                                candidato.setIdCandidato(totalCandidato);
+                                                jpaCandidato.cadastrar(candidato);
+                                                String[] funcoes = {"status","token"};
+                                                String[] valores = {"201",token.createToken(candidato.getEmail())};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            }catch(Exception e){
+                                                System.err.println(e);
+                                                String[] funcoes = {"status","mensagem"};
+                                                String[] valores = {"404",""};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);   
+                                            }
                                         }
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
                                         output.println(jsonEnviado.getJson());
