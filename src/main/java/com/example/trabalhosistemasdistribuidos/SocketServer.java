@@ -139,6 +139,11 @@ public class SocketServer{
                                         candidato.setNome(jsonRecebido.getFuncao("nome"));
                                         candidato.setSenha(Integer.parseInt(jsonRecebido.getFuncao("senha")));
                                         try{
+                                            if(!(candidato.getEmail().contains("@")) || candidato.getEmail().length() < 7 || candidato.getEmail().length() > 50 ||
+                                                candidato.getSenha() < 100 || candidato.getSenha() > 99999999 || candidato.getNome().length() < 6 ||
+                                                candidato.getNome().length() > 30){
+                                                    throw new Exception();
+                                                }
                                             jpaCandidato.editar(candidato);
                                             String[] funcoes = {"status"};
                                             String[] valores = {"201"};
@@ -164,6 +169,11 @@ public class SocketServer{
                                             try{
                                                 candidato = new Candidato(jsonRecebido.getFuncao("email"), Integer.parseInt(jsonRecebido.getFuncao("senha")));
                                                 candidato.setNome(jsonRecebido.getFuncao("nome"));
+                                                if(!(candidato.getEmail().contains("@")) || candidato.getEmail().length() < 7 || 
+                                                    candidato.getEmail().length() > 50 || candidato.getSenha() < 100 || candidato.getSenha() > 99999999 ||
+                                                    candidato.getNome().length() < 6 || candidato.getNome().length() > 30){
+                                                    throw new Exception();
+                                                }
                                                 int totalCandidato = 0;
                                                 for(Candidato candidatoFor : jpaCandidato.buscarTodos()){
                                                     if(candidatoFor != null){
