@@ -27,7 +27,7 @@ public class Candidato implements Serializable {
     @Column(name = "email")
     private String email;
     @Column(name = "senha")
-    private Integer senha;
+    private String senha;
     @Column(name = "nome")
     private String nome;
 
@@ -39,7 +39,7 @@ public class Candidato implements Serializable {
         this.idCandidato = idCandidato;
     }
 
-    public Candidato(String email, Integer senha){
+    public Candidato(String email, String senha){
         this.email = email;
         this.senha = senha;
     }
@@ -64,11 +64,11 @@ public class Candidato implements Serializable {
         this.email = email;
     }
 
-    public Integer getSenha() {
+    public String getSenha() {
         return senha;
     }
 
-    public void setSenha(Integer senha) {
+    public void setSenha(String senha) {
         this.senha = senha;
     }
 

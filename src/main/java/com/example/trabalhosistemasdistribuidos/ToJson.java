@@ -15,13 +15,21 @@ public class ToJson {
 
     public ToJson(String operacao, String[] funcoes, String[] valores){
         json = new JSONObject();
-        this.operacao = operacao;
+        json.put("operacao", operacao);
         this.funcoes = funcoes;
         this.valores = valores;
     }
 
+    public ToJson(String operaca){
+        json = new JSONObject();
+        json.put("operaca", operaca);
+    }
+
+    public void adicionarJson(String funcoes, Object object){
+        this.json.put(funcoes, object);
+    }
+
     private void montarJson(){
-        this.json.put("operacao",operacao);
         for (int i = 0; i < funcoes.length; i++) {
             this.json.put(funcoes[i],valores[i]);
         }

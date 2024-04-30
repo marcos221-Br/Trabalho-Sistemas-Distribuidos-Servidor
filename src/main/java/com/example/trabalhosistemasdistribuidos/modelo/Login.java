@@ -12,7 +12,7 @@ public class Login {
         candidato = new Candidato();
         jpa = new CandidatoDAO();
         candidato.setEmail(this.login);
-        candidato.setSenha(Integer.parseInt(this.senha));
+        candidato.setSenha(this.senha);
         try{
             candidato = jpa.buscarIdCandidato(candidato);
             if(this.login.equals(candidato.getEmail()) && this.senha.equals(candidato.getSenha()+"")){
