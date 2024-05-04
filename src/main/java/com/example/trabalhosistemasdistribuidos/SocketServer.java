@@ -89,6 +89,7 @@ public class SocketServer{
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
                                             jsonEnviado.adicionarJson("status", 401);
                                         }
+                                        jsonEnviado.montarJson();
                                         System.out.println("Enviado: " + jsonEnviado.getJson() + " para " + ip);
                                         output.println(jsonEnviado.getJson());
                                         break;
@@ -115,6 +116,7 @@ public class SocketServer{
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
                                             jsonEnviado.adicionarJson("status", 404);
                                         }
+                                        jsonEnviado.montarJson();
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
                                         output.println(jsonEnviado.getJson());
                                         break;
@@ -132,6 +134,7 @@ public class SocketServer{
                                             String[] valores = {"E-mail não encontrado"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
                                             jsonEnviado.adicionarJson("status", 404);
+                                            jsonEnviado.montarJson();
                                         }
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
                                         output.println(jsonEnviado.getJson());
@@ -157,6 +160,7 @@ public class SocketServer{
                                             String[] valores = {"E-mail não encontrado"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
                                             jsonEnviado.adicionarJson("status", 404);
+                                            jsonEnviado.montarJson();
                                         }
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
                                         output.println(jsonEnviado.getJson());
@@ -200,6 +204,7 @@ public class SocketServer{
                                                 jsonEnviado.adicionarJson("status", 404);
                                             }
                                         }
+                                        jsonEnviado.montarJson();
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
                                         output.println(jsonEnviado.getJson());
                                         break;

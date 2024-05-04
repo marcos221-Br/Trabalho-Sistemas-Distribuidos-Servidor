@@ -20,23 +20,22 @@ public class ToJson {
         this.valores = valores;
     }
 
-    public ToJson(String operaca){
+    public ToJson(String operacao){
         json = new JSONObject();
-        json.put("operaca", operaca);
+        json.put("operacao", operacao);
     }
 
     public void adicionarJson(String funcoes, Object object){
         this.json.put(funcoes, object);
     }
 
-    private void montarJson(){
+    public void montarJson(){
         for (int i = 0; i < funcoes.length; i++) {
             this.json.put(funcoes[i],valores[i]);
         }
     }
 
     public String getJson(){
-        montarJson();
         return this.json.toString();
     }
 
