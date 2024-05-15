@@ -54,23 +54,32 @@ public class SocketServer{
 
                             while ((inputLine = (String) in.readLine()) != null){
                                 System.out.println(ip + " enviou: " + inputLine);
-                                jsonRecebido.setJson(new JSONObject(inputLine));
+                                try{
+                                    jsonRecebido.setJson(new JSONObject(inputLine));
+                                }catch(Exception e){
+                                    System.out.println("JSON enviado de forma errada");
+                                    output.println("JSON enviado de forma errada");
+                                }
                                 switch (jsonRecebido.getOperacao()) {
                                     case "loginEmpresa":
-                                        if((jsonRecebido.getFuncao("email").equals("marcosartemio221@gmail.com")) && 
-                                            (jsonRecebido.getFuncao("senha").equals("12345"))){
-                                            String[] funcoes = {"token"};
-                                            String[] valores = {"abcdefghijklmnopqrstuvwxyz"};
-                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
-                                            jsonEnviado.adicionarJson("status", 200);
-                                        }else{
-                                            String[] funcoes = {"mensagem"};
-                                            String[] valores = {"Login ou senha incorretos"};
-                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
-                                            jsonEnviado.adicionarJson("status", 401);
+                                        try{
+                                            if((jsonRecebido.getFuncao("email").equals("marcosartemio221@gmail.com")) && 
+                                                (jsonRecebido.getFuncao("senha").equals("12345"))){
+                                                String[] funcoes = {"token"};
+                                                String[] valores = {"abcdefghijklmnopqrstuvwxyz"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 200);
+                                            }else{
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"Login ou senha incorretos"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 401);
+                                            }
+                                            System.out.println("Enviado: " + jsonEnviado.getJson() + " para " + ip);
+                                            output.println(jsonEnviado.getJson());
+                                        }catch(Exception e){
+                                            output.println("JSON enviado no formato errado");
                                         }
-                                        System.out.println("Enviado: " + jsonEnviado.getJson() + " para " + ip);
-                                        output.println(jsonEnviado.getJson());
                                         break;
                                     
                                     case "loginCandidato":
@@ -268,25 +277,27 @@ public class SocketServer{
                                         break;
 
                                     default:
+                                        System.out.println("Enviado: Chave \"operacao\" incorreta");
+                                        output.println("Chave \"operacao\" incorreta");
                                         break;
                                 }
-                            }
-
-                            output.close();
-                            in.close();
-                            clienteSocket.close();
-                            System.out.println("Usuário " + ip + " desconectado!");
-                        }catch(IOException IOE){
-                            System.err.println("Usuário " + ip + " enviou null!");
                         }
+
+                        output.close();
+                        in.close();
+                        clienteSocket.close();
+                        System.out.println("Usuário " + ip + " desconectado!");
+                    }catch(IOException IOE){
+                        System.err.println("Usuário " + ip + " enviou null!");
                     }
-                };
-                conexao.start();
-            }
-        }catch(Exception IOE){
-            System.out.println("Impossível completar conexão!");
+                }
+            };
+            conexao.start();
         }
+    }catch(Exception IOE){
+        System.out.println("Impossível completar conexão!");
     }
+}
 
     public void fecharServer(){
         try{
