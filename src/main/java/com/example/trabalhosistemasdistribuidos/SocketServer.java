@@ -5,8 +5,11 @@ import java.net.*;
 import org.json.JSONObject;
 
 import com.example.trabalhosistemasdistribuidos.banco.CandidatoDAO;
+import com.example.trabalhosistemasdistribuidos.banco.EmpresaDAO;
 import com.example.trabalhosistemasdistribuidos.modelo.Candidato;
-import com.example.trabalhosistemasdistribuidos.modelo.Login;
+import com.example.trabalhosistemasdistribuidos.modelo.Empresa;
+import com.example.trabalhosistemasdistribuidos.modelo.LoginCandidato;
+import com.example.trabalhosistemasdistribuidos.modelo.LoginEmpresa;
 
 import java.io.*;
 
@@ -42,6 +45,8 @@ public class SocketServer{
                         TokenGenerator token;
                         Candidato candidato;
                         CandidatoDAO jpaCandidato;
+                        Empresa empresa;
+                        EmpresaDAO jpaEmpresa;
                         ip = clienteSocket.getInetAddress().getHostAddress();
                         System.out.println("Conexão com: " + ip);
                         jsonRecebido = new ToJson();
@@ -62,34 +67,34 @@ public class SocketServer{
                                 }
                                 switch (jsonRecebido.getOperacao()) {
                                     case "loginEmpresa":
-                                        try{
-                                            if((jsonRecebido.getFuncao("email").equals("marcosartemio221@gmail.com")) && 
-                                                (jsonRecebido.getFuncao("senha").equals("12345"))){
-                                                String[] funcoes = {"token"};
-                                                String[] valores = {"abcdefghijklmnopqrstuvwxyz"};
-                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
-                                                jsonEnviado.adicionarJson("status", 200);
-                                            }else{
-                                                String[] funcoes = {"mensagem"};
-                                                String[] valores = {"Login ou senha incorretos"};
-                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
-                                                jsonEnviado.adicionarJson("status", 401);
-                                            }
-                                            System.out.println("Enviado: " + jsonEnviado.getJson() + " para " + ip);
-                                            output.println(jsonEnviado.getJson());
-                                        }catch(Exception e){
-                                            output.println("JSON enviado no formato errado");
+                                        LoginEmpresa loginEmpresa;
+                                        loginEmpresa = new LoginEmpresa();
+                                        loginEmpresa.setLogin(jsonRecebido.getFuncao("email"));
+                                        loginEmpresa.setSenha(jsonRecebido.getFuncao("senha"));
+                                        if(loginEmpresa.buscar()){
+                                            String[] funcoes = {"token"};
+                                            String[] valores = {token.createToken(loginEmpresa.getLogin())};
+                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 200);
+                                        }else{
+                                            String[] funcoes = {"mensagem"};
+                                            String[] valores = {"Login ou senha incorretos"};
+                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 401);
                                         }
+                                        jsonEnviado.montarJson();
+                                        System.out.println("Enviado: " + jsonEnviado.getJson() + " para " + ip);
+                                        output.println(jsonEnviado.getJson());
                                         break;
                                     
                                     case "loginCandidato":
-                                        Login login;
-                                        login = new Login();
-                                        login.setLogin(jsonRecebido.getFuncao("email"));
-                                        login.setSenha(jsonRecebido.getFuncao("senha"));
-                                        if(login.buscar()){
+                                        LoginCandidato loginCandidato;
+                                        loginCandidato = new LoginCandidato();
+                                        loginCandidato.setLogin(jsonRecebido.getFuncao("email"));
+                                        loginCandidato.setSenha(jsonRecebido.getFuncao("senha"));
+                                        if(loginCandidato.buscar()){
                                             String[] funcoes = {"token"};
-                                            String[] valores = {token.createToken(login.getLogin())};
+                                            String[] valores = {token.createToken(loginCandidato.getLogin())};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
                                             jsonEnviado.adicionarJson("status", 200);
                                         }else{
@@ -219,59 +224,123 @@ public class SocketServer{
                                         break;
 
                                     case "visualizarEmpresa":
-                                        if(jsonRecebido.getFuncao("email").equals("marcosartemio221@gmail.com")){
-                                            String[] funcoes = {"status","razaoSocial","cnpj","senha","descricao","ramo"};
-                                            String[] valores = {"201","Marcos Artêmio Gomes dos Santos","67890","67890","Teste","Testando","TI"};
+                                        empresa = new Empresa(jsonRecebido.getFuncao("email"));
+                                        jpaEmpresa = new EmpresaDAO();
+                                        empresa = jpaEmpresa.buscarIdEmpresa(empresa);
+                                        if(empresa != null){
+                                            String[] funcoes = {"razaoSocial","cnpj","senha","descricao","ramo"};
+                                            String[] valores = {empresa.getRazaoSocial(),empresa.getCNPJ(),empresa.getSenha(),empresa.getDescricao(),empresa.getRamo()};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 201);
                                         }else{
-                                            String[] funcoes = {"status","mensagem"};
-                                            String[] valores = {"404","E-mail não encontrado"};
+                                            String[] funcoes = {"mensagem"};
+                                            String[] valores = {"E-mail não encontrado"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 404);
                                         }
+                                        jsonEnviado.montarJson();
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
                                         output.println(jsonEnviado.getJson());
                                         break;
 
                                     case "apagarEmpresa":
-                                        if(jsonRecebido.getFuncao("email").equals("marcosartemio221@gmail.com")){
+                                        empresa = new Empresa(jsonRecebido.getFuncao("email"));
+                                        jpaEmpresa = new EmpresaDAO();
+                                        empresa = jpaEmpresa.buscarIdEmpresa(empresa);
+                                        try{
+                                            jpaEmpresa.excluir(empresa);
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao());
                                             jsonEnviado.adicionarJson("status", 201);
-                                        }else{
-                                            String[] funcoes = {"status","mensagem"};
-                                            String[] valores = {"404","E-mail não encontrado"};
+                                        }catch(Exception e){
+                                            String[] funcoes = {"mensagem"};
+                                            String[] valores = {"E-mail não encontrado"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 404);
+                                            jsonEnviado.montarJson();
                                         }
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
                                         output.println(jsonEnviado.getJson());
                                         break;
 
                                     case "atualizarEmpresa":
-                                        if(jsonRecebido.getFuncao("email").equals("marcosartemio@gmail.com")){
+                                        empresa = new Empresa(jsonRecebido.getFuncao("email"));
+                                        jpaEmpresa = new EmpresaDAO();
+                                        empresa = jpaEmpresa.buscarIdEmpresa(empresa);
+                                        empresa.setCNPJ(jsonRecebido.getFuncao("cnpj"));
+                                        empresa.setSenha(jsonRecebido.getFuncao("senha"));
+                                        empresa.setDescricao(jsonRecebido.getFuncao("descricao"));
+                                        empresa.setRamo(jsonRecebido.getFuncao("ramo"));
+                                        empresa.setRazaoSocial(jsonRecebido.getFuncao("razaoSocial"));
+                                        try{
+                                            if(!(empresa.getEmail().contains("@")) || empresa.getEmail().length() < 7 || 
+                                                empresa.getEmail().length() > 50 || empresa.getSenha().length()<3 || empresa.getSenha().length()>8){
+                                                throw new Exception();
+                                            }
+                                            jpaEmpresa.editar(empresa);
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao());
                                             jsonEnviado.adicionarJson("status", 201);
-                                        }else{
-                                            String[] funcoes = {"status","mensagem"};
-                                            String[] valores = {"404","E-mail não encontrado"};
+                                        }catch(Exception e){
+                                            String[] funcoes = {"mensagem"};
+                                            String[] valores = {"E-mail não encontrado"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 404);
+                                            jsonEnviado.montarJson();
                                         }
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
                                         output.println(jsonEnviado.getJson());
                                         break;
 
                                     case "cadastrarEmpresa":
-                                        if(jsonRecebido.getFuncao("email").equals("marcosartemio221@gmail.com")){
-                                            String[] funcoes = {"status","mensagem"};
-                                            String[] valores = {"422","E-mail já cadastrado"};
+                                        empresa = new Empresa(jsonRecebido.getFuncao("email"),jsonRecebido.getFuncao("senha"));
+                                        jpaEmpresa = new EmpresaDAO();
+                                        empresa = jpaEmpresa.buscarIdEmpresa(empresa);
+                                        if(empresa != null){
+                                            String[] funcoes = {"mensagem"};
+                                            String[] valores = {"E-mail já cadastrado"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(), funcoes, valores);
-                                        }else if(jsonRecebido.getFuncao("cnpj").equals("123")){
-                                            String[] funcoes = {"status","mensagem"};
-                                            String[] valores = {"422","CNPJ já cadastrado"};
-                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 422); 
                                         }else{
-                                            String[] funcoes = {"status","token"};
-                                            String[] valores = {"201","abcdefghijklmnopqrstuwxyz"};
-                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            empresa = new Empresa();
+                                            empresa.setCNPJ(jsonRecebido.getFuncao("cnpj"));
+                                            empresa = jpaEmpresa.buscarCNPJEmpresa(empresa);
+                                            if(empresa != null){
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"CNPJ já cadastrado"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(), funcoes, valores);
+                                                jsonEnviado.adicionarJson("status", 422);
+                                            }else{
+                                                try{
+                                                    empresa = new Empresa(jsonRecebido.getFuncao("email"), jsonRecebido.getFuncao("senha"));
+                                                    empresa.setRazaoSocial(jsonRecebido.getFuncao("razaoSocial"));
+                                                    empresa.setCNPJ(jsonRecebido.getFuncao("cnpj"));
+                                                    empresa.setDescricao(jsonRecebido.getFuncao("descricao"));
+                                                    empresa.setRamo(jsonRecebido.getFuncao("ramo"));
+                                                    if(!(empresa.getEmail().contains("@")) || empresa.getEmail().length() < 7 || 
+                                                        empresa.getEmail().length() > 50 || empresa.getSenha().length()<3 || empresa.getSenha().length()>8){
+                                                        throw new Exception();
+                                                    }
+                                                    int totalEmpresa = 0;
+                                                    for(Empresa empresaFor : jpaEmpresa.buscarTodos()){
+                                                        if(empresaFor != null){
+                                                            totalEmpresa = empresaFor.getIdEmpresa()+1;
+                                                        }
+                                                    }
+                                                    empresa.setIdEmpresa(totalEmpresa);
+                                                    jpaEmpresa.cadastrar(empresa);
+                                                    String[] funcoes = {"status","token"};
+                                                    String[] valores = {"201",token.createToken(empresa.getEmail())};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 201);
+                                                }catch(Exception e){
+                                                    System.err.println(e);
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {""};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 404);
+                                                }
+                                            }
                                         }
+                                        jsonEnviado.montarJson();
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
                                         output.println(jsonEnviado.getJson());
                                         break;

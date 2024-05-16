@@ -2,7 +2,7 @@ package com.example.trabalhosistemasdistribuidos.modelo;
 
 import com.example.trabalhosistemasdistribuidos.banco.CandidatoDAO;
 
-public class Login {
+public class LoginCandidato {
     private String login;
     private String senha;
     private Candidato candidato;
