@@ -6,10 +6,12 @@ import org.json.JSONObject;
 
 import com.example.trabalhosistemasdistribuidos.banco.CandidatoDAO;
 import com.example.trabalhosistemasdistribuidos.banco.EmpresaDAO;
+import com.example.trabalhosistemasdistribuidos.banco.TokenDAO;
 import com.example.trabalhosistemasdistribuidos.modelo.Candidato;
 import com.example.trabalhosistemasdistribuidos.modelo.Empresa;
 import com.example.trabalhosistemasdistribuidos.modelo.LoginCandidato;
 import com.example.trabalhosistemasdistribuidos.modelo.LoginEmpresa;
+import com.example.trabalhosistemasdistribuidos.modelo.Tokens;
 
 import java.io.*;
 
@@ -47,6 +49,8 @@ public class SocketServer{
                         CandidatoDAO jpaCandidato;
                         Empresa empresa;
                         EmpresaDAO jpaEmpresa;
+                        Tokens tokenClass;
+                        TokenDAO jpaToken;
                         ip = clienteSocket.getInetAddress().getHostAddress();
                         System.out.println("Conexão com: " + ip);
                         jsonRecebido = new ToJson();
@@ -69,11 +73,18 @@ public class SocketServer{
                                     case "loginEmpresa":
                                         LoginEmpresa loginEmpresa;
                                         loginEmpresa = new LoginEmpresa();
+                                        jpaToken = new TokenDAO();
                                         loginEmpresa.setLogin(jsonRecebido.getFuncao("email"));
                                         loginEmpresa.setSenha(jsonRecebido.getFuncao("senha"));
                                         if(loginEmpresa.buscar()){
                                             String[] funcoes = {"token"};
-                                            String[] valores = {token.createToken(loginEmpresa.getLogin())};
+                                            tokenClass = new Tokens(token.createToken(loginEmpresa.getLogin()));
+                                            String[] valores = {tokenClass.getToken()};
+                                            try {
+                                                jpaToken.cadastrar(tokenClass);
+                                            } catch (Exception e) {
+                                                System.out.println("Impossível criar token");
+                                            }
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
                                             jsonEnviado.adicionarJson("status", 200);
                                         }else{
@@ -90,11 +101,18 @@ public class SocketServer{
                                     case "loginCandidato":
                                         LoginCandidato loginCandidato;
                                         loginCandidato = new LoginCandidato();
+                                        jpaToken = new TokenDAO();
                                         loginCandidato.setLogin(jsonRecebido.getFuncao("email"));
                                         loginCandidato.setSenha(jsonRecebido.getFuncao("senha"));
                                         if(loginCandidato.buscar()){
                                             String[] funcoes = {"token"};
-                                            String[] valores = {token.createToken(loginCandidato.getLogin())};
+                                            tokenClass = new Tokens(token.createToken(loginCandidato.getLogin()));
+                                            String[] valores = {tokenClass.getToken()};
+                                            try {
+                                                jpaToken.cadastrar(tokenClass);
+                                            } catch (Exception e) {
+                                                System.out.println("Impossível criar token");
+                                            }
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
                                             jsonEnviado.adicionarJson("status", 200);
                                         }else{
@@ -109,26 +127,50 @@ public class SocketServer{
                                         break;
                                     
                                     case "logout":
-                                        jsonEnviado = new ToJson("logout");
-                                        jsonEnviado.adicionarJson("status", 204);
+                                        jpaToken = new TokenDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token"));
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        if(tokenClass != null){
+                                            try {
+                                                jpaToken.excluir(tokenClass);
+                                            } catch (Exception e) {
+                                                System.out.println("Impossível excluir token");
+                                            }
+                                            jsonEnviado = new ToJson("logout");
+                                            jsonEnviado.adicionarJson("status", 204);
+                                        }else{
+                                            jsonEnviado = new ToJson("logout");
+                                            jsonEnviado.adicionarJson("status", 204);
+                                            jsonEnviado.adicionarJson("mensagem", "Token inválido");
+                                        }
                                         System.out.println("Enviado: " + jsonEnviado.getJson() + " para " + ip);
                                         output.println(jsonEnviado.getJson());
                                         break;
                                     
                                     case "visualizarCandidato":
-                                        candidato = new Candidato(jsonRecebido.getFuncao("email"));
-                                        jpaCandidato = new CandidatoDAO();
-                                        candidato = jpaCandidato.buscarIdCandidato(candidato);
-                                        if(candidato != null){
-                                            String[] funcoes = {"nome","senha"};
-                                            String[] valores = {candidato.getNome(),candidato.getSenha()};
-                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
-                                            jsonEnviado.adicionarJson("status", 201);
+                                        jpaToken = new TokenDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token"));
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        if(tokenClass != null){
+                                            candidato = new Candidato(jsonRecebido.getFuncao("email"));
+                                            jpaCandidato = new CandidatoDAO();
+                                            candidato = jpaCandidato.buscarIdCandidato(candidato);
+                                            if(candidato != null){
+                                                String[] funcoes = {"nome","senha"};
+                                                String[] valores = {candidato.getNome(),candidato.getSenha()};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 201);
+                                            }else{
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"E-mail não encontrado"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 404);
+                                            }
                                         }else{
                                             String[] funcoes = {"mensagem"};
-                                            String[] valores = {"E-mail não encontrado"};
+                                            String[] valores = {"Token inválido"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
-                                            jsonEnviado.adicionarJson("status", 404);
+                                            jsonEnviado.adicionarJson("status", 401);
                                         }
                                         jsonEnviado.montarJson();
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
@@ -136,51 +178,77 @@ public class SocketServer{
                                         break;
 
                                     case "apagarCandidato":
-                                        candidato = new Candidato(jsonRecebido.getFuncao("email"));
-                                        jpaCandidato = new CandidatoDAO();
-                                        candidato = jpaCandidato.buscarIdCandidato(candidato);
-                                        try{
-                                            jpaCandidato.excluir(candidato);
-                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao());
-                                            jsonEnviado.adicionarJson("status", 201);
-                                        }catch(Exception e){
+                                        jpaToken = new TokenDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token"));
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        if(tokenClass != null){
+                                            candidato = new Candidato(jsonRecebido.getFuncao("email"));
+                                            jpaCandidato = new CandidatoDAO();
+                                            candidato = jpaCandidato.buscarIdCandidato(candidato);
+                                            try{
+                                                jpaCandidato.excluir(candidato);
+                                                try {
+                                                    jpaToken.excluir(tokenClass);
+                                                } catch (Exception e) {
+                                                    System.out.println("Impossível excluir token");
+                                                }
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao());
+                                                jsonEnviado.adicionarJson("status", 201);
+                                            }catch(Exception e){
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"E-mail não encontrado"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 404);
+                                                jsonEnviado.montarJson();
+                                            }
+                                        }else{
                                             String[] funcoes = {"mensagem"};
-                                            String[] valores = {"E-mail não encontrado"};
+                                            String[] valores = {"Token inválido"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
-                                            jsonEnviado.adicionarJson("status", 404);
-                                            jsonEnviado.montarJson();
+                                            jsonEnviado.adicionarJson("status", 401);
                                         }
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
                                         output.println(jsonEnviado.getJson());
                                         break;
 
                                     case "atualizarCandidato":
-                                        candidato = new Candidato(jsonRecebido.getFuncao("email"));
-                                        jpaCandidato = new CandidatoDAO();
-                                        candidato = jpaCandidato.buscarIdCandidato(candidato);
-                                        candidato.setNome(jsonRecebido.getFuncao("nome"));
-                                        candidato.setSenha(jsonRecebido.getFuncao("senha"));
-                                        try{
-                                            if(!(candidato.getEmail().contains("@")) || candidato.getEmail().length() < 7 || candidato.getEmail().length() > 50 ||
-                                                candidato.getSenha().length()<3 || candidato.getSenha().length()>8 || candidato.getNome().length() < 6 ||
-                                                candidato.getNome().length() > 30){
-                                                    throw new Exception();
-                                                }
-                                            jpaCandidato.editar(candidato);
-                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao());
-                                            jsonEnviado.adicionarJson("status", 201);
-                                        }catch(Exception e){
+                                        jpaToken = new TokenDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token"));
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        if(tokenClass != null){
+                                            candidato = new Candidato(jsonRecebido.getFuncao("email"));
+                                            jpaCandidato = new CandidatoDAO();
+                                            candidato = jpaCandidato.buscarIdCandidato(candidato);
+                                            candidato.setNome(jsonRecebido.getFuncao("nome"));
+                                            candidato.setSenha(jsonRecebido.getFuncao("senha"));
+                                            try{
+                                                if(!(candidato.getEmail().contains("@")) || candidato.getEmail().length() < 7 || candidato.getEmail().length() > 50 ||
+                                                    candidato.getSenha().length()<3 || candidato.getSenha().length()>8 || candidato.getNome().length() < 6 ||
+                                                    candidato.getNome().length() > 30){
+                                                        throw new Exception();
+                                                    }
+                                                jpaCandidato.editar(candidato);
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao());
+                                                jsonEnviado.adicionarJson("status", 201);
+                                            }catch(Exception e){
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"E-mail não encontrado"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 404);
+                                                jsonEnviado.montarJson();
+                                            }
+                                        }else{
                                             String[] funcoes = {"mensagem"};
-                                            String[] valores = {"E-mail não encontrado"};
+                                            String[] valores = {"Token inválido"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
-                                            jsonEnviado.adicionarJson("status", 404);
-                                            jsonEnviado.montarJson();
+                                            jsonEnviado.adicionarJson("status", 401);
                                         }
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
                                         output.println(jsonEnviado.getJson());
                                         break;
 
                                     case "cadastrarCandidato":
+                                        jpaToken = new TokenDAO();
                                         candidato = new Candidato(jsonRecebido.getFuncao("email"),jsonRecebido.getFuncao("senha"));
                                         jpaCandidato = new CandidatoDAO();
                                         candidato = jpaCandidato.buscarIdCandidato(candidato);
@@ -207,7 +275,13 @@ public class SocketServer{
                                                 candidato.setIdCandidato(totalCandidato);
                                                 jpaCandidato.cadastrar(candidato);
                                                 String[] funcoes = {"status","token"};
-                                                String[] valores = {"201",token.createToken(candidato.getEmail())};
+                                                tokenClass = new Tokens(token.createToken(candidato.getEmail()));
+                                                String[] valores = {"201",tokenClass.getToken()};
+                                                try {
+                                                    jpaToken.cadastrar(tokenClass);
+                                                } catch (Exception e) {
+                                                    System.out.println("Impossível criar token");
+                                                }
                                                 jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
                                                 jsonEnviado.adicionarJson("status", 201);
                                             }catch(Exception e){
@@ -224,19 +298,29 @@ public class SocketServer{
                                         break;
 
                                     case "visualizarEmpresa":
-                                        empresa = new Empresa(jsonRecebido.getFuncao("email"));
-                                        jpaEmpresa = new EmpresaDAO();
-                                        empresa = jpaEmpresa.buscarIdEmpresa(empresa);
-                                        if(empresa != null){
-                                            String[] funcoes = {"razaoSocial","cnpj","senha","descricao","ramo"};
-                                            String[] valores = {empresa.getRazaoSocial(),empresa.getCNPJ(),empresa.getSenha(),empresa.getDescricao(),empresa.getRamo()};
-                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
-                                            jsonEnviado.adicionarJson("status", 201);
+                                        jpaToken = new TokenDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token"));
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        if(tokenClass != null){
+                                            empresa = new Empresa(jsonRecebido.getFuncao("email"));
+                                            jpaEmpresa = new EmpresaDAO();
+                                            empresa = jpaEmpresa.buscarIdEmpresa(empresa);
+                                            if(empresa != null){
+                                                String[] funcoes = {"razaoSocial","cnpj","senha","descricao","ramo"};
+                                                String[] valores = {empresa.getRazaoSocial(),empresa.getCNPJ(),empresa.getSenha(),empresa.getDescricao(),empresa.getRamo()};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 201);
+                                            }else{
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"E-mail não encontrado"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 404);
+                                            }
                                         }else{
                                             String[] funcoes = {"mensagem"};
-                                            String[] valores = {"E-mail não encontrado"};
+                                            String[] valores = {"Token inválido"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
-                                            jsonEnviado.adicionarJson("status", 404);
+                                            jsonEnviado.adicionarJson("status", 401);
                                         }
                                         jsonEnviado.montarJson();
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
@@ -244,18 +328,34 @@ public class SocketServer{
                                         break;
 
                                     case "apagarEmpresa":
-                                        empresa = new Empresa(jsonRecebido.getFuncao("email"));
-                                        jpaEmpresa = new EmpresaDAO();
-                                        empresa = jpaEmpresa.buscarIdEmpresa(empresa);
-                                        try{
-                                            jpaEmpresa.excluir(empresa);
-                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao());
-                                            jsonEnviado.adicionarJson("status", 201);
-                                        }catch(Exception e){
+                                        jpaToken = new TokenDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token"));
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        if(tokenClass != null){
+                                            empresa = new Empresa(jsonRecebido.getFuncao("email"));
+                                            jpaEmpresa = new EmpresaDAO();
+                                            empresa = jpaEmpresa.buscarIdEmpresa(empresa);
+                                            try{
+                                                jpaEmpresa.excluir(empresa);
+                                                try {
+                                                    jpaToken.excluir(tokenClass);
+                                                } catch (Exception e) {
+                                                    System.out.println("Impossível excluir token");
+                                                }
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao());
+                                                jsonEnviado.adicionarJson("status", 201);
+                                            }catch(Exception e){
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"E-mail não encontrado"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 404);
+                                                jsonEnviado.montarJson();
+                                            }
+                                        }else{
                                             String[] funcoes = {"mensagem"};
-                                            String[] valores = {"E-mail não encontrado"};
+                                            String[] valores = {"Token inválido"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
-                                            jsonEnviado.adicionarJson("status", 404);
+                                            jsonEnviado.adicionarJson("status", 401);
                                             jsonEnviado.montarJson();
                                         }
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
@@ -263,27 +363,38 @@ public class SocketServer{
                                         break;
 
                                     case "atualizarEmpresa":
-                                        empresa = new Empresa(jsonRecebido.getFuncao("email"));
-                                        jpaEmpresa = new EmpresaDAO();
-                                        empresa = jpaEmpresa.buscarIdEmpresa(empresa);
-                                        empresa.setCNPJ(jsonRecebido.getFuncao("cnpj"));
-                                        empresa.setSenha(jsonRecebido.getFuncao("senha"));
-                                        empresa.setDescricao(jsonRecebido.getFuncao("descricao"));
-                                        empresa.setRamo(jsonRecebido.getFuncao("ramo"));
-                                        empresa.setRazaoSocial(jsonRecebido.getFuncao("razaoSocial"));
-                                        try{
-                                            if(!(empresa.getEmail().contains("@")) || empresa.getEmail().length() < 7 || 
-                                                empresa.getEmail().length() > 50 || empresa.getSenha().length()<3 || empresa.getSenha().length()>8){
-                                                throw new Exception();
+                                        jpaToken = new TokenDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token"));
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        if(tokenClass != null){
+                                            empresa = new Empresa(jsonRecebido.getFuncao("email"));
+                                            jpaEmpresa = new EmpresaDAO();
+                                            empresa = jpaEmpresa.buscarIdEmpresa(empresa);
+                                            empresa.setCNPJ(jsonRecebido.getFuncao("cnpj"));
+                                            empresa.setSenha(jsonRecebido.getFuncao("senha"));
+                                            empresa.setDescricao(jsonRecebido.getFuncao("descricao"));
+                                            empresa.setRamo(jsonRecebido.getFuncao("ramo"));
+                                            empresa.setRazaoSocial(jsonRecebido.getFuncao("razaoSocial"));
+                                            try{
+                                                if(!(empresa.getEmail().contains("@")) || empresa.getEmail().length() < 7 || 
+                                                    empresa.getEmail().length() > 50 || empresa.getSenha().length()<3 || empresa.getSenha().length()>8){
+                                                    throw new Exception();
+                                                }
+                                                jpaEmpresa.editar(empresa);
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao());
+                                                jsonEnviado.adicionarJson("status", 201);
+                                            }catch(Exception e){
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"E-mail não encontrado"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 404);
+                                                jsonEnviado.montarJson();
                                             }
-                                            jpaEmpresa.editar(empresa);
-                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao());
-                                            jsonEnviado.adicionarJson("status", 201);
-                                        }catch(Exception e){
+                                        }else{
                                             String[] funcoes = {"mensagem"};
-                                            String[] valores = {"E-mail não encontrado"};
+                                            String[] valores = {"Token inválido"};
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
-                                            jsonEnviado.adicionarJson("status", 404);
+                                            jsonEnviado.adicionarJson("status", 401);
                                             jsonEnviado.montarJson();
                                         }
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
@@ -291,6 +402,7 @@ public class SocketServer{
                                         break;
 
                                     case "cadastrarEmpresa":
+                                        jpaToken = new TokenDAO();
                                         empresa = new Empresa(jsonRecebido.getFuncao("email"),jsonRecebido.getFuncao("senha"));
                                         jpaEmpresa = new EmpresaDAO();
                                         empresa = jpaEmpresa.buscarIdEmpresa(empresa);
@@ -328,7 +440,13 @@ public class SocketServer{
                                                     empresa.setIdEmpresa(totalEmpresa);
                                                     jpaEmpresa.cadastrar(empresa);
                                                     String[] funcoes = {"status","token"};
-                                                    String[] valores = {"201",token.createToken(empresa.getEmail())};
+                                                    tokenClass = new Tokens(token.createToken(empresa.getEmail()));
+                                                    String[] valores = {"201",tokenClass.getToken()};
+                                                    try {
+                                                        jpaToken.cadastrar(tokenClass);
+                                                    } catch (Exception e) {
+                                                        System.out.println("Impossível criar token");
+                                                    }
                                                     jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
                                                     jsonEnviado.adicionarJson("status", 201);
                                                 }catch(Exception e){
