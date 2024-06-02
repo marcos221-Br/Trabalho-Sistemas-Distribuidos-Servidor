@@ -27,13 +27,11 @@ public class TokenDAO extends AbstrataDAO<TokenJPAController, Tokens>{
 
     @Override
     public void editar(Tokens objeto) throws Exception {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'editar'");
     }
 
     @Override
     public List<Tokens> buscarTodos() {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'buscarTodos'");
     }
 }

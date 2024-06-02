@@ -5,7 +5,7 @@ import org.json.JSONObject;
 public class ToJson {
     private String operacao;
     private String[] funcoes;
-    private String[] valores;
+    private Object[] valores;
     private JSONObject json;
 
     public ToJson(){
@@ -39,20 +39,22 @@ public class ToJson {
         return this.json.toString();
     }
 
+    @SuppressWarnings("exports")
     public void setJson(JSONObject json){
+        System.out.println(json);
         int i = 0;
         this.operacao = (String) json.get("operacao");
         json.remove("operacao");
         this.funcoes = new String[json.length()];
-        this.valores = new String[json.length()];
+        this.valores = new Object[json.length()];
         for (String string : json.keySet()) {
             this.funcoes[i] = string;
-            this.valores[i] = json.getString(string);
+            this.valores[i] = json.get(string);
             i++;
         }
     }
 
-    public String getFuncao(String funcao){
+    public Object getFuncao(String funcao){
         for (int i = 0; i < this.funcoes.length; i++) {
             if(this.funcoes[i].equals(funcao)){
                 return this.valores[i];

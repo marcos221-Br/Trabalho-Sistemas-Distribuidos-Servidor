@@ -1,13 +1,22 @@
 package com.example.trabalhosistemasdistribuidos;
 
 import java.net.*;
+import java.util.ArrayList;
 
+import javax.persistence.EntityExistsException;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.example.trabalhosistemasdistribuidos.banco.CandidatoCompetenciaDAO;
 import com.example.trabalhosistemasdistribuidos.banco.CandidatoDAO;
+import com.example.trabalhosistemasdistribuidos.banco.CompetenciaDAO;
 import com.example.trabalhosistemasdistribuidos.banco.EmpresaDAO;
 import com.example.trabalhosistemasdistribuidos.banco.TokenDAO;
 import com.example.trabalhosistemasdistribuidos.modelo.Candidato;
+import com.example.trabalhosistemasdistribuidos.modelo.CandidatoCompetencia;
+import com.example.trabalhosistemasdistribuidos.modelo.Competencia;
+import com.example.trabalhosistemasdistribuidos.modelo.CompetenciaExperiencia;
 import com.example.trabalhosistemasdistribuidos.modelo.Empresa;
 import com.example.trabalhosistemasdistribuidos.modelo.LoginCandidato;
 import com.example.trabalhosistemasdistribuidos.modelo.LoginEmpresa;
@@ -51,6 +60,10 @@ public class SocketServer{
                         EmpresaDAO jpaEmpresa;
                         Tokens tokenClass;
                         TokenDAO jpaToken;
+                        CandidatoCompetencia candidatoCompetencia;
+                        CandidatoCompetenciaDAO jpaCandidatoCompetencia;
+                        Competencia competencia;
+                        CompetenciaDAO jpaCompetencia;
                         ip = clienteSocket.getInetAddress().getHostAddress();
                         System.out.println("Conexão com: " + ip);
                         jsonRecebido = new ToJson();
@@ -74,8 +87,8 @@ public class SocketServer{
                                         LoginEmpresa loginEmpresa;
                                         loginEmpresa = new LoginEmpresa();
                                         jpaToken = new TokenDAO();
-                                        loginEmpresa.setLogin(jsonRecebido.getFuncao("email"));
-                                        loginEmpresa.setSenha(jsonRecebido.getFuncao("senha"));
+                                        loginEmpresa.setLogin(jsonRecebido.getFuncao("email") + "");
+                                        loginEmpresa.setSenha(jsonRecebido.getFuncao("senha") + "");
                                         if(loginEmpresa.buscar()){
                                             String[] funcoes = {"token"};
                                             tokenClass = new Tokens(token.createToken(loginEmpresa.getLogin()));
@@ -102,8 +115,8 @@ public class SocketServer{
                                         LoginCandidato loginCandidato;
                                         loginCandidato = new LoginCandidato();
                                         jpaToken = new TokenDAO();
-                                        loginCandidato.setLogin(jsonRecebido.getFuncao("email"));
-                                        loginCandidato.setSenha(jsonRecebido.getFuncao("senha"));
+                                        loginCandidato.setLogin(jsonRecebido.getFuncao("email") + "");
+                                        loginCandidato.setSenha(jsonRecebido.getFuncao("senha") + "");
                                         if(loginCandidato.buscar()){
                                             String[] funcoes = {"token"};
                                             tokenClass = new Tokens(token.createToken(loginCandidato.getLogin()));
@@ -128,7 +141,7 @@ public class SocketServer{
                                     
                                     case "logout":
                                         jpaToken = new TokenDAO();
-                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token"));
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
                                         tokenClass = jpaToken.buscar(tokenClass);
                                         if(tokenClass != null){
                                             try {
@@ -149,10 +162,10 @@ public class SocketServer{
                                     
                                     case "visualizarCandidato":
                                         jpaToken = new TokenDAO();
-                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token"));
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
                                         tokenClass = jpaToken.buscar(tokenClass);
                                         if(tokenClass != null){
-                                            candidato = new Candidato(jsonRecebido.getFuncao("email"));
+                                            candidato = new Candidato(jsonRecebido.getFuncao("email") + "");
                                             jpaCandidato = new CandidatoDAO();
                                             candidato = jpaCandidato.buscarIdCandidato(candidato);
                                             if(candidato != null){
@@ -179,10 +192,10 @@ public class SocketServer{
 
                                     case "apagarCandidato":
                                         jpaToken = new TokenDAO();
-                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token"));
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
                                         tokenClass = jpaToken.buscar(tokenClass);
                                         if(tokenClass != null){
-                                            candidato = new Candidato(jsonRecebido.getFuncao("email"));
+                                            candidato = new Candidato(jsonRecebido.getFuncao("email") + "");
                                             jpaCandidato = new CandidatoDAO();
                                             candidato = jpaCandidato.buscarIdCandidato(candidato);
                                             try{
@@ -213,14 +226,14 @@ public class SocketServer{
 
                                     case "atualizarCandidato":
                                         jpaToken = new TokenDAO();
-                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token"));
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
                                         tokenClass = jpaToken.buscar(tokenClass);
                                         if(tokenClass != null){
-                                            candidato = new Candidato(jsonRecebido.getFuncao("email"));
+                                            candidato = new Candidato(jsonRecebido.getFuncao("email") + "");
                                             jpaCandidato = new CandidatoDAO();
                                             candidato = jpaCandidato.buscarIdCandidato(candidato);
-                                            candidato.setNome(jsonRecebido.getFuncao("nome"));
-                                            candidato.setSenha(jsonRecebido.getFuncao("senha"));
+                                            candidato.setNome(jsonRecebido.getFuncao("nome") + "");
+                                            candidato.setSenha(jsonRecebido.getFuncao("senha") + "");
                                             try{
                                                 if(!(candidato.getEmail().contains("@")) || candidato.getEmail().length() < 7 || candidato.getEmail().length() > 50 ||
                                                     candidato.getSenha().length()<3 || candidato.getSenha().length()>8 || candidato.getNome().length() < 6 ||
@@ -249,7 +262,7 @@ public class SocketServer{
 
                                     case "cadastrarCandidato":
                                         jpaToken = new TokenDAO();
-                                        candidato = new Candidato(jsonRecebido.getFuncao("email"),jsonRecebido.getFuncao("senha"));
+                                        candidato = new Candidato(jsonRecebido.getFuncao("email") + "",jsonRecebido.getFuncao("senha") + "");
                                         jpaCandidato = new CandidatoDAO();
                                         candidato = jpaCandidato.buscarIdCandidato(candidato);
                                         if(candidato != null){
@@ -259,8 +272,8 @@ public class SocketServer{
                                             jsonEnviado.adicionarJson("status", 422);
                                         }else{
                                             try{
-                                                candidato = new Candidato(jsonRecebido.getFuncao("email"), jsonRecebido.getFuncao("senha"));
-                                                candidato.setNome(jsonRecebido.getFuncao("nome"));
+                                                candidato = new Candidato(jsonRecebido.getFuncao("email") + "", jsonRecebido.getFuncao("senha") + "");
+                                                candidato.setNome(jsonRecebido.getFuncao("nome") + "");
                                                 if(!(candidato.getEmail().contains("@")) || candidato.getEmail().length() < 7 || 
                                                     candidato.getEmail().length() > 50 || candidato.getSenha().length()<3 || candidato.getSenha().length()>8 ||
                                                     candidato.getNome().length() < 6 || candidato.getNome().length() > 30){
@@ -299,10 +312,10 @@ public class SocketServer{
 
                                     case "visualizarEmpresa":
                                         jpaToken = new TokenDAO();
-                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token"));
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
                                         tokenClass = jpaToken.buscar(tokenClass);
                                         if(tokenClass != null){
-                                            empresa = new Empresa(jsonRecebido.getFuncao("email"));
+                                            empresa = new Empresa(jsonRecebido.getFuncao("email") + "");
                                             jpaEmpresa = new EmpresaDAO();
                                             empresa = jpaEmpresa.buscarIdEmpresa(empresa);
                                             if(empresa != null){
@@ -329,10 +342,10 @@ public class SocketServer{
 
                                     case "apagarEmpresa":
                                         jpaToken = new TokenDAO();
-                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token"));
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
                                         tokenClass = jpaToken.buscar(tokenClass);
                                         if(tokenClass != null){
-                                            empresa = new Empresa(jsonRecebido.getFuncao("email"));
+                                            empresa = new Empresa(jsonRecebido.getFuncao("email") + "");
                                             jpaEmpresa = new EmpresaDAO();
                                             empresa = jpaEmpresa.buscarIdEmpresa(empresa);
                                             try{
@@ -364,17 +377,17 @@ public class SocketServer{
 
                                     case "atualizarEmpresa":
                                         jpaToken = new TokenDAO();
-                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token"));
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
                                         tokenClass = jpaToken.buscar(tokenClass);
                                         if(tokenClass != null){
-                                            empresa = new Empresa(jsonRecebido.getFuncao("email"));
+                                            empresa = new Empresa(jsonRecebido.getFuncao("email") + "");
                                             jpaEmpresa = new EmpresaDAO();
                                             empresa = jpaEmpresa.buscarIdEmpresa(empresa);
-                                            empresa.setCNPJ(jsonRecebido.getFuncao("cnpj"));
-                                            empresa.setSenha(jsonRecebido.getFuncao("senha"));
-                                            empresa.setDescricao(jsonRecebido.getFuncao("descricao"));
-                                            empresa.setRamo(jsonRecebido.getFuncao("ramo"));
-                                            empresa.setRazaoSocial(jsonRecebido.getFuncao("razaoSocial"));
+                                            empresa.setCNPJ(jsonRecebido.getFuncao("cnpj") + "");
+                                            empresa.setSenha(jsonRecebido.getFuncao("senha") + "");
+                                            empresa.setDescricao(jsonRecebido.getFuncao("descricao") + "");
+                                            empresa.setRamo(jsonRecebido.getFuncao("ramo") + "");
+                                            empresa.setRazaoSocial(jsonRecebido.getFuncao("razaoSocial") + "");
                                             try{
                                                 if(!(empresa.getEmail().contains("@")) || empresa.getEmail().length() < 7 || 
                                                     empresa.getEmail().length() > 50 || empresa.getSenha().length()<3 || empresa.getSenha().length()>8){
@@ -403,7 +416,7 @@ public class SocketServer{
 
                                     case "cadastrarEmpresa":
                                         jpaToken = new TokenDAO();
-                                        empresa = new Empresa(jsonRecebido.getFuncao("email"),jsonRecebido.getFuncao("senha"));
+                                        empresa = new Empresa(jsonRecebido.getFuncao("email") + "",jsonRecebido.getFuncao("senha") + "");
                                         jpaEmpresa = new EmpresaDAO();
                                         empresa = jpaEmpresa.buscarIdEmpresa(empresa);
                                         if(empresa != null){
@@ -413,7 +426,7 @@ public class SocketServer{
                                             jsonEnviado.adicionarJson("status", 422); 
                                         }else{
                                             empresa = new Empresa();
-                                            empresa.setCNPJ(jsonRecebido.getFuncao("cnpj"));
+                                            empresa.setCNPJ(jsonRecebido.getFuncao("cnpj") + "");
                                             empresa = jpaEmpresa.buscarCNPJEmpresa(empresa);
                                             if(empresa != null){
                                                 String[] funcoes = {"mensagem"};
@@ -422,11 +435,11 @@ public class SocketServer{
                                                 jsonEnviado.adicionarJson("status", 422);
                                             }else{
                                                 try{
-                                                    empresa = new Empresa(jsonRecebido.getFuncao("email"), jsonRecebido.getFuncao("senha"));
-                                                    empresa.setRazaoSocial(jsonRecebido.getFuncao("razaoSocial"));
-                                                    empresa.setCNPJ(jsonRecebido.getFuncao("cnpj"));
-                                                    empresa.setDescricao(jsonRecebido.getFuncao("descricao"));
-                                                    empresa.setRamo(jsonRecebido.getFuncao("ramo"));
+                                                    empresa = new Empresa(jsonRecebido.getFuncao("email") + "", jsonRecebido.getFuncao("senha") + "");
+                                                    empresa.setRazaoSocial(jsonRecebido.getFuncao("razaoSocial") + "");
+                                                    empresa.setCNPJ(jsonRecebido.getFuncao("cnpj") + "");
+                                                    empresa.setDescricao(jsonRecebido.getFuncao("descricao") + "");
+                                                    empresa.setRamo(jsonRecebido.getFuncao("ramo") + "");
                                                     if(!(empresa.getEmail().contains("@")) || empresa.getEmail().length() < 7 || 
                                                         empresa.getEmail().length() > 50 || empresa.getSenha().length()<3 || empresa.getSenha().length()>8){
                                                         throw new Exception();
@@ -457,6 +470,208 @@ public class SocketServer{
                                                     jsonEnviado.adicionarJson("status", 404);
                                                 }
                                             }
+                                        }
+                                        jsonEnviado.montarJson();
+                                        System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
+                                        output.println(jsonEnviado.getJson());
+                                        break;
+                                    
+                                    case "cadastrarCompetenciaExperiencia":
+                                        jpaToken = new TokenDAO();
+                                        jpaCandidato = new CandidatoDAO();
+                                        jpaCompetencia = new CompetenciaDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        jpaCandidatoCompetencia = new CandidatoCompetenciaDAO();
+                                        if(tokenClass != null){
+                                            candidato = new Candidato(jsonRecebido.getFuncao("email") + "");
+                                            candidato = jpaCandidato.buscarIdCandidato(candidato);
+                                            if(candidato != null){
+                                                try{
+                                                    for (int i = 0; i < ((JSONArray) jsonRecebido.getFuncao("competenciaExperiencia")).length(); i++) {
+                                                        competencia = new Competencia(((JSONArray) jsonRecebido.getFuncao("competenciaExperiencia")).getJSONObject(i).getString("competencia"));
+                                                        competencia = jpaCompetencia.buscarIdCompetencia(competencia);
+                                                        int totalCandidatoCompetencia = 0;
+                                                        for (CandidatoCompetencia candidatoCompetenciaId : jpaCandidatoCompetencia.buscarTodos()) {
+                                                            if(candidatoCompetenciaId != null){
+                                                                totalCandidatoCompetencia = candidatoCompetenciaId.getIdCandidatoCompetencia()+1;
+                                                            }
+                                                        }
+                                                        if(jpaCandidatoCompetencia.buscarIdCandidatoCompetencia(new CandidatoCompetencia(candidato.getIdCandidato(),competencia.getIdCompetencia())) != null){
+                                                            throw new EntityExistsException();
+                                                        }
+                                                        candidatoCompetencia = new CandidatoCompetencia(totalCandidatoCompetencia, candidato.getIdCandidato(), competencia.getIdCompetencia(), 
+                                                                                        ((JSONArray) jsonRecebido.getFuncao("competenciaExperiencia")).getJSONObject(i).getInt("experiencia"));
+                                                        jpaCandidatoCompetencia.cadastrar(candidatoCompetencia);
+                                                    }
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Competencia/Experiencia cadastrada com sucesso"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 201);
+                                                }catch(EntityExistsException e){
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Competência já encontrada!"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 422);
+                                                }catch(Exception e){
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Competência não encontrada!"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 422);
+                                                }
+                                            }else{
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"Candidato não encontrado!"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 404);
+                                            }
+                                        }else{
+                                            String[] funcoes = {"mensagem"};
+                                            String[] valores = {"Token inválido"};
+                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 401);
+                                        }
+                                        jsonEnviado.montarJson();
+                                        System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
+                                        output.println(jsonEnviado.getJson());
+                                        break;
+
+                                    case "visualizarCompetenciaExperiencia":
+                                        jpaToken = new TokenDAO();
+                                        jpaCandidato = new CandidatoDAO();
+                                        jpaCompetencia = new CompetenciaDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        jpaCandidatoCompetencia = new CandidatoCompetenciaDAO();
+                                        if(tokenClass != null){
+                                            candidato = new Candidato(jsonRecebido.getFuncao("email") + "");
+                                            candidato = jpaCandidato.buscarIdCandidato(candidato);
+                                            if(candidato != null){
+                                                try{
+                                                    ArrayList<JSONObject> competenciaExperiencia = new ArrayList<>();
+                                                    for (CandidatoCompetencia candidatoCompetenciaFor : jpaCandidatoCompetencia.buscarCompetenciasCandidato(candidato)) {
+                                                        competenciaExperiencia.add(new JSONObject(new CompetenciaExperiencia(jpaCompetencia.buscar(
+                                                                                    new Competencia(candidatoCompetenciaFor.getIdCompetencia())).getCompetencia(),
+                                                                                    candidatoCompetenciaFor.getTempo())));
+                                                    }
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao());
+                                                    jsonEnviado.adicionarJson("status", 201);
+                                                    jsonEnviado.adicionarJson("competenciaExperiencia", competenciaExperiencia);
+                                                }catch(Exception e){
+                                                    System.out.println(e);
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Competência não encontrada!"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 422);
+                                                    jsonEnviado.montarJson();
+                                                }
+                                            }else{
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"Candidato não encontrado!"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 404);
+                                                jsonEnviado.montarJson();
+                                            }
+                                        }else{
+                                            String[] funcoes = {"mensagem"};
+                                            String[] valores = {"Token inválido"};
+                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 401);
+                                            jsonEnviado.montarJson();
+                                        }
+                                        System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
+                                        output.println(jsonEnviado.getJson());
+                                        break;
+
+                                    case "apagarCompetenciaExperiencia":
+                                        jpaToken = new TokenDAO();
+                                        jpaCandidato = new CandidatoDAO();
+                                        jpaCompetencia = new CompetenciaDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        jpaCandidatoCompetencia = new CandidatoCompetenciaDAO();
+                                        if(tokenClass != null){
+                                            candidato = new Candidato(jsonRecebido.getFuncao("email") + "");
+                                            candidato = jpaCandidato.buscarIdCandidato(candidato);
+                                            if(candidato != null){
+                                                try{
+                                                    for (int i = 0; i < ((JSONArray) jsonRecebido.getFuncao("competenciaExperiencia")).length(); i++) {
+                                                        competencia = new Competencia(((JSONArray) jsonRecebido.getFuncao("competenciaExperiencia")).getJSONObject(i).getString("competencia"));
+                                                        competencia = jpaCompetencia.buscarIdCompetencia(competencia);
+                                                        candidatoCompetencia = new CandidatoCompetencia(candidato.getIdCandidato(), competencia.getIdCompetencia());
+                                                        candidatoCompetencia = jpaCandidatoCompetencia.buscarIdCandidatoCompetencia(candidatoCompetencia);
+                                                        jpaCandidatoCompetencia.excluir(candidatoCompetencia);
+                                                    }
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Competencia/Experiencia apagada com sucesso"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 201);
+                                                }catch(Exception e){
+                                                    System.out.println(e);
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Competência não encontrada!"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 422);
+                                                }
+                                            }else{
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"Candidato não encontrado!"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 404);
+                                            }
+                                        }else{
+                                            String[] funcoes = {"mensagem"};
+                                            String[] valores = {"Token inválido"};
+                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 401);
+                                        }
+                                        jsonEnviado.montarJson();
+                                        System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
+                                        output.println(jsonEnviado.getJson());
+                                        break;
+
+                                    case "atualizarCompetenciaExperiencia":
+                                        jpaToken = new TokenDAO();
+                                        jpaCandidato = new CandidatoDAO();
+                                        jpaCompetencia = new CompetenciaDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        jpaCandidatoCompetencia = new CandidatoCompetenciaDAO();
+                                        if(tokenClass != null){
+                                            candidato = new Candidato(jsonRecebido.getFuncao("email") + "");
+                                            candidato = jpaCandidato.buscarIdCandidato(candidato);
+                                            if(candidato != null){
+                                                try{
+                                                    for (int i = 0; i < ((JSONArray) jsonRecebido.getFuncao("competenciaExperiencia")).length(); i++) {
+                                                        competencia = new Competencia(((JSONArray) jsonRecebido.getFuncao("competenciaExperiencia")).getJSONObject(i).getString("competencia"));
+                                                        competencia = jpaCompetencia.buscarIdCompetencia(competencia);
+                                                        candidatoCompetencia = new CandidatoCompetencia(candidato.getIdCandidato(), competencia.getIdCompetencia());
+                                                        candidatoCompetencia = jpaCandidatoCompetencia.buscarIdCandidatoCompetencia(candidatoCompetencia);
+                                                        candidatoCompetencia.setTempo(((JSONArray) jsonRecebido.getFuncao("competenciaExperiencia")).getJSONObject(i).getInt("experiencia"));
+                                                        jpaCandidatoCompetencia.editar(candidatoCompetencia);
+                                                    }
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Competencia/Experiencia atualizado com sucesso"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 201);
+                                                }catch(Exception e){
+                                                    System.out.println(e);
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Competência não encontrada!"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 422);
+                                                }
+                                            }else{
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"Candidato não encontrado!"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 404);
+                                            }
+                                        }else{
+                                            String[] funcoes = {"mensagem"};
+                                            String[] valores = {"Token inválido"};
+                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 401);
                                         }
                                         jsonEnviado.montarJson();
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);

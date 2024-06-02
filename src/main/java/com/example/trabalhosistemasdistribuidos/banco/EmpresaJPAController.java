@@ -96,6 +96,7 @@ public class EmpresaJPAController implements Serializable {
         }
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private List<Empresa> encontrarEntidadesEmpresa(boolean tudo, int maximoResultados, int primeiroResultado){
         EntityManager em = getEntityManager();
         try{

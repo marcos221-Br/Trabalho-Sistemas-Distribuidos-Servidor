@@ -9,13 +9,13 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaQuery;
 
-import com.example.trabalhosistemasdistribuidos.modelo.Candidato;
+import com.example.trabalhosistemasdistribuidos.modelo.Competencia;
 
-public class CandidatoJPAController implements Serializable{
+public class CompetenciaJPAController implements Serializable{
     
     private EntityManagerFactory emf = null;
 
-    public CandidatoJPAController(EntityManagerFactory emf){
+    public CompetenciaJPAController(EntityManagerFactory emf){
         this.emf = emf;
     }
 
@@ -23,25 +23,25 @@ public class CandidatoJPAController implements Serializable{
         return emf.createEntityManager();
     }
 
-    public Candidato encontrarCandidato(int idCandidato){
+    public Competencia encontrarCompetencia(int idCompetencia){
         EntityManager em = getEntityManager();
         try{
-            return em.find(Candidato.class, idCandidato);
+            return em.find(Competencia.class, idCompetencia);
         }finally{
             em.close();
         }
     }
 
-    public void criar(Candidato candidato) throws Exception{
+    public void criar(Competencia competencia) throws Exception{
         EntityManager em = null;
         try{
             em = getEntityManager();
             em.getTransaction().begin();
-            em.persist(candidato);
+            em.persist(competencia);
             em.getTransaction().commit();
         }catch (Exception ex){
-            if(encontrarCandidato(candidato.getIdCandidato()) != null){
-                throw new Exception("Candidato " + candidato + " já existente.",ex);
+            if(encontrarCompetencia(competencia.getIdCompetencia()) != null){
+                throw new Exception("Competencia " + competencia + " já existente.",ex);
             }
             throw ex;
         }finally{
@@ -51,18 +51,18 @@ public class CandidatoJPAController implements Serializable{
         }
     }
 
-    public void editar(Candidato candidato) throws Exception{
+    public void editar(Competencia competencia) throws Exception{
         EntityManager em = null;
         try{
             em = getEntityManager();
             em.getTransaction().begin();
-            candidato = em.merge(candidato);
+            competencia = em.merge(competencia);
             em.getTransaction().commit();
         }catch(Exception ex){
             String msg = ex.getLocalizedMessage();
             if(msg == null || msg.length() == 0){
-                int matricula = candidato.getIdCandidato();
-                if(encontrarCandidato(matricula) == null){
+                int matricula = competencia.getIdCompetencia();
+                if(encontrarCompetencia(matricula) == null){
                     throw new Exception("O produto com matrícula " + matricula + " não existe.");
                 }
             }
@@ -74,19 +74,19 @@ public class CandidatoJPAController implements Serializable{
         }
     }
 
-    public void deletar(int idCandidato) throws Exception{
+    public void deletar(int idCompetencia) throws Exception{
         EntityManager em = null;
         try{
             em = getEntityManager();
             em.getTransaction().begin();
-            Candidato candidato;
+            Competencia competencia;
             try{
-                candidato = em.getReference(Candidato.class, idCandidato);
-                candidato.getIdCandidato();
+                competencia = em.getReference(Competencia.class, idCompetencia);
+                competencia.getIdCompetencia();
             }catch(EntityNotFoundException enfe){
-                throw new Exception("O usuario com matricula " + idCandidato + " não existe.",enfe);
+                throw new Exception("O usuario com matricula " + idCompetencia + " não existe.",enfe);
             }
-            em.remove(candidato);
+            em.remove(competencia);
             em.getTransaction().commit();
         }finally{
             if(em != null){
@@ -96,11 +96,11 @@ public class CandidatoJPAController implements Serializable{
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private List<Candidato> encontrarEntidadesCandidato(boolean tudo, int maximoResultados, int primeiroResultado){
+    private List<Competencia> encontrarEntidadesCompetencia(boolean tudo, int maximoResultados, int primeiroResultado){
         EntityManager em = getEntityManager();
         try{
             CriteriaQuery cq = em.getCriteriaBuilder().createQuery();
-            cq.select(cq.from(Candidato.class));
+            cq.select(cq.from(Competencia.class));
             Query q = em.createQuery(cq);
             if(!tudo){
                 q.setMaxResults(maximoResultados);
@@ -112,20 +112,20 @@ public class CandidatoJPAController implements Serializable{
         }
     }
 
-    public List<Candidato> encontrarEntidadesCandidato(int maximoResultados, int primeiroResultado){
-        return encontrarEntidadesCandidato(false,maximoResultados,primeiroResultado);
+    public List<Competencia> encontrarEntidadesCompetencia(int maximoResultados, int primeiroResultado){
+        return encontrarEntidadesCompetencia(false,maximoResultados,primeiroResultado);
     }
 
-    public List<Candidato> encontrarEntidadesCandidato(){
-        return encontrarEntidadesCandidato(true, -1, -1);
+    public List<Competencia> encontrarEntidadesCompetencia(){
+        return encontrarEntidadesCompetencia(true, -1, -1);
     }
 
-    public Candidato encontrarCandidatoLogin(String email){
+    public Competencia encontrarCompetenciaNome(String competencia){
         EntityManager em = getEntityManager();
         try{
-            return em.createQuery("SELECT u FROM Candidato u WHERE u.email = :email", Candidato.class).setParameter("email", email).getSingleResult();
+            return em.createQuery("SELECT u FROM Competencia u WHERE u.competencia = :competencia", Competencia.class).setParameter("competencia", competencia).getSingleResult();
         }catch(NoResultException NRE){
-            System.out.println("Candidato não encontrado");
+            System.out.println("Competencia não encontrado");
             return null;
         }finally{
             em.close();
