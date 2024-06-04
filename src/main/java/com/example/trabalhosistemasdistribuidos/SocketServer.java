@@ -13,6 +13,8 @@ import com.example.trabalhosistemasdistribuidos.banco.CandidatoDAO;
 import com.example.trabalhosistemasdistribuidos.banco.CompetenciaDAO;
 import com.example.trabalhosistemasdistribuidos.banco.EmpresaDAO;
 import com.example.trabalhosistemasdistribuidos.banco.TokenDAO;
+import com.example.trabalhosistemasdistribuidos.banco.VagaCompetenciaDAO;
+import com.example.trabalhosistemasdistribuidos.banco.VagaDAO;
 import com.example.trabalhosistemasdistribuidos.modelo.Candidato;
 import com.example.trabalhosistemasdistribuidos.modelo.CandidatoCompetencia;
 import com.example.trabalhosistemasdistribuidos.modelo.Competencia;
@@ -21,6 +23,9 @@ import com.example.trabalhosistemasdistribuidos.modelo.Empresa;
 import com.example.trabalhosistemasdistribuidos.modelo.LoginCandidato;
 import com.example.trabalhosistemasdistribuidos.modelo.LoginEmpresa;
 import com.example.trabalhosistemasdistribuidos.modelo.Tokens;
+import com.example.trabalhosistemasdistribuidos.modelo.Vaga;
+import com.example.trabalhosistemasdistribuidos.modelo.VagaCompetencia;
+import com.example.trabalhosistemasdistribuidos.modelo.VagaId;
 
 import java.io.*;
 
@@ -64,6 +69,10 @@ public class SocketServer{
                         CandidatoCompetenciaDAO jpaCandidatoCompetencia;
                         Competencia competencia;
                         CompetenciaDAO jpaCompetencia;
+                        Vaga vaga;
+                        VagaDAO jpaVaga;
+                        VagaCompetencia vagaCompetencia;
+                        VagaCompetenciaDAO jpaVagaCompetencia;
                         ip = clienteSocket.getInetAddress().getHostAddress();
                         System.out.println("Conexão com: " + ip);
                         jsonRecebido = new ToJson();
@@ -678,28 +687,306 @@ public class SocketServer{
                                         output.println(jsonEnviado.getJson());
                                         break;
 
+                                    case "cadastrarVaga":
+                                        jpaToken = new TokenDAO();
+                                        jpaEmpresa = new EmpresaDAO();
+                                        jpaCompetencia = new CompetenciaDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        jpaVaga = new VagaDAO();
+                                        jpaVagaCompetencia = new VagaCompetenciaDAO();
+                                        if(tokenClass != null){
+                                            empresa = new Empresa(jsonRecebido.getFuncao("email") + "");
+                                            empresa = jpaEmpresa.buscarIdEmpresa(empresa);
+                                            if(empresa != null){
+                                                try{
+                                                    int totalVaga = 0;
+                                                    for (Vaga vagaId : jpaVaga.buscarTodos()) {
+                                                        if(vagaId != null){
+                                                            totalVaga = vagaId.getIdVaga()+1;
+                                                        }
+                                                    }
+                                                    vaga = new Vaga(totalVaga, empresa.getIdEmpresa(), Float.parseFloat(jsonRecebido.getFuncao("faixaSalarial")+""),
+                                                                    jsonRecebido.getFuncao("descricao")+"", jsonRecebido.getFuncao("estado")+"",
+                                                                    jsonRecebido.getFuncao("nome")+"");
+                                                    jpaVaga.cadastrar(vaga);
+                                                    for (int i = 0; i < ((JSONArray) jsonRecebido.getFuncao("competencias")).length(); i++) {
+                                                        competencia = new Competencia(((JSONArray) jsonRecebido.getFuncao("competencias")).getString(i));
+                                                        competencia = jpaCompetencia.buscarIdCompetencia(competencia);
+                                                        int totalVagaCompetencia = 0;
+                                                        for (VagaCompetencia vagaCompetenciaId : jpaVagaCompetencia.buscarTodos()) {
+                                                            if(vagaCompetenciaId != null){
+                                                                totalVagaCompetencia = vagaCompetenciaId.getIdVagaCompetencia()+1;
+                                                            }
+                                                        }
+                                                        vagaCompetencia = new VagaCompetencia(totalVagaCompetencia, vaga.getIdVaga(), competencia.getIdCompetencia());
+                                                        jpaVagaCompetencia.cadastrar(vagaCompetencia);
+                                                    }
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Vaga cadastrada com sucesso"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 201);
+                                                }catch(Exception e){
+                                                    System.out.println(e);
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Competência não encontrada!"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 422);
+                                                }
+                                            }else{
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"Empresa não encontrado!"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 404);
+                                            }
+                                        }else{
+                                            String[] funcoes = {"mensagem"};
+                                            String[] valores = {"Token inválido"};
+                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 401);
+                                        }
+                                        jsonEnviado.montarJson();
+                                        System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
+                                        output.println(jsonEnviado.getJson());
+                                        break;
+
+                                    case "listarVagas":
+                                        jpaToken = new TokenDAO();
+                                        jpaVaga = new VagaDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        jpaEmpresa = new EmpresaDAO();
+                                        if(tokenClass != null){
+                                            empresa = new Empresa(jsonRecebido.getFuncao("email") + "");
+                                            empresa = jpaEmpresa.buscarIdEmpresa(empresa);
+                                            if(empresa != null){
+                                                try{
+                                                    vaga = new Vaga(empresa.getIdEmpresa());
+                                                    ArrayList<JSONObject> vagaId = new ArrayList<>();
+                                                    for (Vaga vagaFor : jpaVaga.buscarVagaEmail(vaga)) {
+                                                        vagaId.add(new JSONObject(new VagaId(vagaFor.getNome(),vagaFor.getIdVaga())));
+                                                    }
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao());
+                                                    jsonEnviado.adicionarJson("vagas", vagaId);
+                                                }catch(Exception e){
+                                                    System.out.println(e);
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Competência não encontrada!"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 422);
+                                                    jsonEnviado.montarJson();
+                                                }
+                                            }else{
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"Candidato não encontrado!"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 404);
+                                                jsonEnviado.montarJson();
+                                            }
+                                        }else{
+                                            String[] funcoes = {"mensagem"};
+                                            String[] valores = {"Token inválido"};
+                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 401);
+                                            jsonEnviado.montarJson();
+                                        }
+                                        System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
+                                        output.println(jsonEnviado.getJson());
+                                        break;
+
+                                    case "visualizarVaga":
+                                        jpaToken = new TokenDAO();
+                                        jpaEmpresa = new EmpresaDAO();
+                                        jpaCompetencia = new CompetenciaDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        jpaVaga = new VagaDAO();
+                                        jpaVagaCompetencia = new VagaCompetenciaDAO();
+                                        ArrayList<String> competenciaArray = new ArrayList<>();
+                                        if(tokenClass != null){
+                                            empresa = new Empresa(jsonRecebido.getFuncao("email") + "");
+                                            empresa = jpaEmpresa.buscarIdEmpresa(empresa);
+                                            if(empresa != null){
+                                                try{
+                                                    vaga = new Vaga();
+                                                    vaga.setIdVaga(Integer.parseInt(jsonRecebido.getFuncao("idVaga")+""));
+                                                    vaga = jpaVaga.buscar(vaga);
+                                                    vagaCompetencia = new VagaCompetencia(vaga.getIdVaga());
+                                                    for (VagaCompetencia vagaCompetenciaFor : jpaVagaCompetencia.buscarVagaCompetenciaIdVagas(vagaCompetencia)) {
+                                                        competenciaArray.add(jpaCompetencia.buscar(new Competencia(vagaCompetenciaFor.getIdCompetencia())).getCompetencia());
+                                                    }
+                                                    String[] funcoes = {"descricao","estado"};
+                                                    String[] valores = {vaga.getDescricao(),vaga.getEstado()};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("faixaSalarial", vaga.getFaixaSalarial());
+                                                    jsonEnviado.adicionarJson("competencias", competenciaArray);
+                                                }catch(Exception e){
+                                                    System.out.println(e);
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Competência não encontrada!"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 422);
+                                                }
+                                            }else{
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"Empresa não encontrado!"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 404);
+                                            }
+                                        }else{
+                                            String[] funcoes = {"mensagem"};
+                                            String[] valores = {"Token inválido"};
+                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 401);
+                                        }
+                                        jsonEnviado.montarJson();
+                                        System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
+                                        output.println(jsonEnviado.getJson());
+                                        break;
+
+                                    case "apagarVaga":
+                                        jpaToken = new TokenDAO();
+                                        jpaEmpresa = new EmpresaDAO();
+                                        jpaCompetencia = new CompetenciaDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        jpaVaga = new VagaDAO();
+                                        jpaVagaCompetencia = new VagaCompetenciaDAO();
+                                        if(tokenClass != null){
+                                            empresa = new Empresa(jsonRecebido.getFuncao("email") + "");
+                                            empresa = jpaEmpresa.buscarIdEmpresa(empresa);
+                                            if(empresa != null){
+                                                try{
+                                                    vaga = new Vaga();
+                                                    vaga.setIdVaga(Integer.parseInt(jsonRecebido.getFuncao("idVaga")+""));
+                                                    jpaVaga.excluir(vaga);
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Vaga apagada com sucesso"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 201);
+                                                }catch(Exception e){
+                                                    System.out.println(e);
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Competência não encontrada!"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 422);
+                                                }
+                                            }else{
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"Empresa não encontrado!"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 404);
+                                            }
+                                        }else{
+                                            String[] funcoes = {"mensagem"};
+                                            String[] valores = {"Token inválido"};
+                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 401);
+                                        }
+                                        jsonEnviado.montarJson();
+                                        System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
+                                        output.println(jsonEnviado.getJson());
+                                        break;
+
+                                    case "atualizarVaga":
+                                        jpaToken = new TokenDAO();
+                                        jpaEmpresa = new EmpresaDAO();
+                                        jpaCompetencia = new CompetenciaDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        jpaVaga = new VagaDAO();
+                                        jpaVagaCompetencia = new VagaCompetenciaDAO();
+                                        if(tokenClass != null){
+                                            empresa = new Empresa(jsonRecebido.getFuncao("email") + "");
+                                            empresa = jpaEmpresa.buscarIdEmpresa(empresa);
+                                            if(empresa != null){
+                                                try{
+                                                    vaga = new Vaga();
+                                                    vaga.setIdVaga(Integer.parseInt(jsonRecebido.getFuncao("idVaga")+""));
+                                                    vaga = jpaVaga.buscar(vaga);
+                                                    vaga.setDescricao(jsonRecebido.getFuncao("descricao")+"");
+                                                    vaga.setEstado(jsonRecebido.getFuncao("estado")+"");
+                                                    vaga.setNome(jsonRecebido.getFuncao("nome")+"");
+                                                    vaga.setFaixaSalarial(Float.parseFloat(jsonRecebido.getFuncao("faixaSalarial")+""));
+                                                    jpaVaga.editar(vaga);
+                                                    for (VagaCompetencia vagaCompetenciaFor : jpaVagaCompetencia.buscarVagaCompetenciaIdVagas(new VagaCompetencia(vaga.getIdVaga()))) {
+                                                        int contains = 0;
+                                                        String nomeCompetencia = jpaCompetencia.buscar(new Competencia(vagaCompetenciaFor.getIdCompetencia())).getCompetencia();
+                                                        for (int i = 0; i < ((JSONArray) jsonRecebido.getFuncao("competencias")).length(); i++) {
+                                                            if(((JSONArray) jsonRecebido.getFuncao("competencias")).getString(i) == nomeCompetencia){
+                                                                contains = 1;
+                                                            }
+                                                        }
+                                                        if(contains == 0){
+                                                            jpaVagaCompetencia.excluir(vagaCompetenciaFor);
+                                                        }
+                                                    }
+                                                    for (int i = 0; i < ((JSONArray) jsonRecebido.getFuncao("competencias")).length(); i++) {
+                                                        int contains = 0;
+                                                        for (VagaCompetencia vagaCompetenciaFor : jpaVagaCompetencia.buscarVagaCompetenciaIdVagas(new VagaCompetencia(vaga.getIdVaga()))) {
+                                                            if(((JSONArray) jsonRecebido.getFuncao("competencias")).getString(i) == jpaCompetencia.buscar(new Competencia(vagaCompetenciaFor.getIdCompetencia())).getCompetencia()){
+                                                                contains = 1;
+                                                            }
+                                                        }
+                                                        if(contains == 0){
+                                                            int totalVagaCompetencia = 0;
+                                                            for (VagaCompetencia vagaCompetenciaId : jpaVagaCompetencia.buscarTodos()) {
+                                                                if(vagaCompetenciaId != null){
+                                                                    totalVagaCompetencia = vagaCompetenciaId.getIdVagaCompetencia()+1;
+                                                                }
+                                                            }
+                                                            jpaVagaCompetencia.cadastrar(new VagaCompetencia(totalVagaCompetencia, vaga.getIdVaga(), jpaCompetencia.buscarIdCompetencia(new Competencia(((JSONArray) jsonRecebido.getFuncao("competencias")).getString(i))).getIdCompetencia()));
+                                                        }
+                                                    }
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Vaga atualizada com sucesso"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 201);
+                                                }catch(Exception e){
+                                                    System.out.println(e);
+                                                    String[] funcoes = {"mensagem"};
+                                                    String[] valores = {"Competência não encontrada!"};
+                                                    jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                    jsonEnviado.adicionarJson("status", 422);
+                                                }
+                                            }else{
+                                                String[] funcoes = {"mensagem"};
+                                                String[] valores = {"Empresa não encontrado!"};
+                                                jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                                jsonEnviado.adicionarJson("status", 404);
+                                            }
+                                        }else{
+                                            String[] funcoes = {"mensagem"};
+                                            String[] valores = {"Token inválido"};
+                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 401);
+                                        }
+                                        jsonEnviado.montarJson();
+                                        System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
+                                        output.println(jsonEnviado.getJson());
+                                        break;
+
                                     default:
                                         System.out.println("Enviado: Chave \"operacao\" incorreta");
                                         output.println("Chave \"operacao\" incorreta");
                                         break;
                                 }
+                            }
+                            output.close();
+                            in.close();
+                            clienteSocket.close();
+                            System.out.println("Usuário " + ip + " desconectado!");
+                        }catch(IOException IOE){
+                            System.err.println("Usuário " + ip + " enviou null!");
                         }
-
-                        output.close();
-                        in.close();
-                        clienteSocket.close();
-                        System.out.println("Usuário " + ip + " desconectado!");
-                    }catch(IOException IOE){
-                        System.err.println("Usuário " + ip + " enviou null!");
                     }
-                }
-            };
-            conexao.start();
+                };
+                conexao.start();
+            }
+        }catch(Exception IOE){
+            System.out.println("Impossível completar conexão!");
         }
-    }catch(Exception IOE){
-        System.out.println("Impossível completar conexão!");
     }
-}
 
     public void fecharServer(){
         try{
