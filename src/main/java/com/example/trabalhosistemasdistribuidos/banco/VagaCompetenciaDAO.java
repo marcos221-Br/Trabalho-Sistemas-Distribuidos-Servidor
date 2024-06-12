@@ -38,4 +38,8 @@ public class VagaCompetenciaDAO extends AbstrataDAO<VagaCompetenciaJPAController
     public List<VagaCompetencia> buscarVagaCompetenciaIdVagas(VagaCompetencia object){
          return objetoJPA.encontrarVagaCompetenciaIdVaga(object.getIdVaga());
     }
+
+    public List<VagaCompetencia> buscarVagaCompetenciaIdComeptencia(VagaCompetencia object){
+        return objetoJPA.encontrarVagaCompetenciaIdCompetencia(object.getIdCompetencia());
+    }
 }

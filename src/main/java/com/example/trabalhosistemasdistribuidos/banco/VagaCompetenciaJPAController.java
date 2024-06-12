@@ -131,4 +131,16 @@ public class VagaCompetenciaJPAController implements Serializable{
             em.close();
         }
     }
+
+    public List<VagaCompetencia> encontrarVagaCompetenciaIdCompetencia(Integer idCompetencia){
+        EntityManager em = getEntityManager();
+        try{
+            return em.createQuery("SELECT u FROM VagaCompetencia u WHERE u.idCompetencia = :idCompetencia", VagaCompetencia.class).setParameter("idCompetencia", idCompetencia).getResultList();
+        }catch(NoResultException NRE){
+            System.out.println("Competencia não encontrado");
+            return null;
+        }finally{
+            em.close();
+        }
+    }
 }

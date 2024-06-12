@@ -41,7 +41,6 @@ public class ToJson {
 
     @SuppressWarnings("exports")
     public void setJson(JSONObject json){
-        System.out.println(json);
         int i = 0;
         this.operacao = (String) json.get("operacao");
         json.remove("operacao");

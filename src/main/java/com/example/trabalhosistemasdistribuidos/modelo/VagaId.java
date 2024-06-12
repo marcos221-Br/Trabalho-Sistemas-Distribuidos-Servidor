@@ -1,16 +1,16 @@
 package com.example.trabalhosistemasdistribuidos.modelo;
 
 public class VagaId {
-    private String nomeVaga;
+    private String nome;
     private int idVaga;
 
-    public VagaId(String nomeVaga, int idVaga){
-        this.nomeVaga = nomeVaga;
+    public VagaId(String nome, int idVaga){
+        this.nome = nome;
         this.idVaga = idVaga;
     }
 
-    public String getNomeVaga(){
-        return this.nomeVaga;
+    public String getNome(){
+        return this.nome;
     }
 
     public int getIdVaga(){

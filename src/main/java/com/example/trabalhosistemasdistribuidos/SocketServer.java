@@ -20,6 +20,8 @@ import com.example.trabalhosistemasdistribuidos.modelo.CandidatoCompetencia;
 import com.example.trabalhosistemasdistribuidos.modelo.Competencia;
 import com.example.trabalhosistemasdistribuidos.modelo.CompetenciaExperiencia;
 import com.example.trabalhosistemasdistribuidos.modelo.Empresa;
+import com.example.trabalhosistemasdistribuidos.modelo.Filtro;
+import com.example.trabalhosistemasdistribuidos.modelo.FiltroVaga;
 import com.example.trabalhosistemasdistribuidos.modelo.LoginCandidato;
 import com.example.trabalhosistemasdistribuidos.modelo.LoginEmpresa;
 import com.example.trabalhosistemasdistribuidos.modelo.Tokens;
@@ -73,6 +75,8 @@ public class SocketServer{
                         VagaDAO jpaVaga;
                         VagaCompetencia vagaCompetencia;
                         VagaCompetenciaDAO jpaVagaCompetencia;
+                        Filtro filtro;
+                        FiltroVaga filtrovaga;
                         ip = clienteSocket.getInetAddress().getHostAddress();
                         System.out.println("Conexão com: " + ip);
                         jsonRecebido = new ToJson();
@@ -768,6 +772,7 @@ public class SocketServer{
                                                     }
                                                     jsonEnviado = new ToJson(jsonRecebido.getOperacao());
                                                     jsonEnviado.adicionarJson("vagas", vagaId);
+                                                    jsonEnviado.adicionarJson("status", 201);
                                                 }catch(Exception e){
                                                     System.out.println(e);
                                                     String[] funcoes = {"mensagem"};
@@ -820,6 +825,7 @@ public class SocketServer{
                                                     jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
                                                     jsonEnviado.adicionarJson("faixaSalarial", vaga.getFaixaSalarial());
                                                     jsonEnviado.adicionarJson("competencias", competenciaArray);
+                                                    jsonEnviado.adicionarJson("status", 201);
                                                 }catch(Exception e){
                                                     System.out.println(e);
                                                     String[] funcoes = {"mensagem"};
@@ -962,6 +968,78 @@ public class SocketServer{
                                             jsonEnviado.adicionarJson("status", 401);
                                         }
                                         jsonEnviado.montarJson();
+                                        System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
+                                        output.println(jsonEnviado.getJson());
+                                        break;
+
+                                    case "filtrarVagas":
+                                        jpaToken = new TokenDAO();
+                                        jpaCompetencia = new CompetenciaDAO();
+                                        tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
+                                        tokenClass = jpaToken.buscar(tokenClass);
+                                        jpaVaga = new VagaDAO();
+                                        jpaVagaCompetencia = new VagaCompetenciaDAO();
+                                        jpaEmpresa = new EmpresaDAO();
+                                        if(tokenClass != null){
+                                            filtro = new Filtro(((JSONObject) jsonRecebido.getFuncao("filtros")).getString("tipo"));
+                                            ArrayList<JSONObject> vagaArray = new ArrayList<>();
+                                            for (int i = 0; i < ((JSONArray) ((JSONObject) jsonRecebido.getFuncao("filtros")).get("competencias")).length(); i++) {
+                                                filtro.setCompetencias(((JSONArray) ((JSONObject) jsonRecebido.getFuncao("filtros")).get("competencias")).getString(i));
+                                            }
+                                            for (String array : filtro.getCompetencias()) {
+                                                vagaCompetencia = new VagaCompetencia();
+                                                vagaCompetencia.setIdCompetencia(jpaCompetencia.buscarIdCompetencia(new Competencia(array)).getIdCompetencia());
+                                                for (VagaCompetencia vagaCompetenciaFor : jpaVagaCompetencia.buscarVagaCompetenciaIdComeptencia(vagaCompetencia)) {
+                                                    vaga = new Vaga();
+                                                    vaga.setIdVaga(vagaCompetenciaFor.getIdVaga());
+                                                    filtrovaga = new FiltroVaga(jpaVaga.buscar(vaga).getIdVaga(),
+                                                                                jpaEmpresa.buscar(new Empresa(jpaVaga.buscar(vaga).getIdEmpresa())).getEmail(),
+                                                                                jpaVaga.buscar(vaga).getFaixaSalarial(), jpaVaga.buscar(vaga).getDescricao(),
+                                                                                jpaVaga.buscar(vaga).getEstado(), jpaVaga.buscar(vaga).getNome());
+                                                    for (VagaCompetencia competenciaNome : jpaVagaCompetencia.buscarVagaCompetenciaIdVagas(new VagaCompetencia(jpaVaga.buscar(vaga).getIdVaga()))) {
+                                                        filtrovaga.setCompetencias(jpaCompetencia.buscar(new Competencia(competenciaNome.getIdCompetencia())).getCompetencia());
+                                                    }
+                                                    if(filtro.getTipo().equalsIgnoreCase("OR")){
+                                                        if(vagaArray.isEmpty()){
+                                                            vagaArray.add(filtrovaga.getJson());
+                                                        }else{
+                                                            boolean have = false;
+                                                            for (int i = 0; i < vagaArray.size(); i++) {
+                                                                if(vagaArray.get(i).getInt("idVaga") == filtrovaga.getIdVaga()){
+                                                                    have = true;
+                                                                }
+                                                            }
+                                                            if(!have){
+                                                                vagaArray.add(filtrovaga.getJson());
+                                                            }
+                                                        }
+                                                    }else{
+                                                        if(vagaArray.isEmpty() && filtrovaga.getCompetencias().containsAll(filtro.getCompetencias())){
+                                                            vagaArray.add(filtrovaga.getJson());
+                                                        }else{
+                                                            boolean have = false;
+                                                            for (int i = 0; i < vagaArray.size(); i++) {
+                                                                if(vagaArray.get(i).getInt("idVaga") == filtrovaga.getIdVaga()){
+                                                                    have = true;
+                                                                }
+                                                            }
+                                                            if(!have && filtrovaga.getCompetencias().containsAll(filtro.getCompetencias())){
+                                                                vagaArray.add(filtrovaga.getJson());
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao());
+                                            jsonEnviado.adicionarJson("status", 201);
+                                            jsonEnviado.adicionarJson("vagas", vagaArray);
+                                        }else{
+                                            String[] funcoes = {"mensagem"};
+                                            String[] valores = {"Token inválido"};
+                                            jsonEnviado = new ToJson(jsonRecebido.getOperacao(),funcoes,valores);
+                                            jsonEnviado.adicionarJson("status", 401);
+                                            jsonEnviado.montarJson();
+                                        }
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
                                         output.println(jsonEnviado.getJson());
                                         break;
