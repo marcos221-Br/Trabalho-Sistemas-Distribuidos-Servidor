@@ -10,6 +10,7 @@ import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaQuery;
 
 import com.example.trabalhosistemasdistribuidos.modelo.CandidatoCompetencia;
+import com.example.trabalhosistemasdistribuidos.modelo.VagaCompetencia;
 
 public class CandidatoCompetenciaJPAController implements Serializable{
     
@@ -138,6 +139,18 @@ public class CandidatoCompetenciaJPAController implements Serializable{
             return em.createQuery("SELECT u FROM CandidatoCompetencia u WHERE u.idCandidato = :idCandidato AND u.idCompetencia = :idCompetencia", CandidatoCompetencia.class).setParameter("idCandidato", idCandidato).setParameter("idCompetencia", idCompetencia).getSingleResult();
         }catch(NoResultException NRE){
             System.out.println("CandidatoCompetencia não encontrado");
+            return null;
+        }finally{
+            em.close();
+        }
+    }
+
+    public List<CandidatoCompetencia> encontrarCandidatoCompetenciaIdCompetencia(Integer idCompetencia){
+        EntityManager em = getEntityManager();
+        try{
+            return em.createQuery("SELECT u FROM CandidatoCompetencia u WHERE u.idCompetencia = :idCompetencia", CandidatoCompetencia.class).setParameter("idCompetencia", idCompetencia).getResultList();
+        }catch(NoResultException NRE){
+            System.out.println("Competencia não encontrado");
             return null;
         }finally{
             em.close();

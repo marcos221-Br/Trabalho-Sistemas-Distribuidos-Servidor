@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.example.trabalhosistemasdistribuidos.modelo.Candidato;
 import com.example.trabalhosistemasdistribuidos.modelo.CandidatoCompetencia;
+import com.example.trabalhosistemasdistribuidos.modelo.VagaCompetencia;
 
 public class CandidatoCompetenciaDAO extends AbstrataDAO<CandidatoCompetenciaJPAController, CandidatoCompetencia>{
     
@@ -42,5 +43,9 @@ public class CandidatoCompetenciaDAO extends AbstrataDAO<CandidatoCompetenciaJPA
 
     public CandidatoCompetencia buscarIdCandidatoCompetencia(CandidatoCompetencia object){
         return objetoJPA.encontrarIdCandidatoCompetencia(object.getIdCandidato(), object.getIdCompetencia());
+    }
+
+    public List<CandidatoCompetencia> buscarCandidatoCompetenciaIdComeptencia(CandidatoCompetencia object){
+        return objetoJPA.encontrarCandidatoCompetenciaIdCompetencia(object.getIdCompetencia());
     }
 }
