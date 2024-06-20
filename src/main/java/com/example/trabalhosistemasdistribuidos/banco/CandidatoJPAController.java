@@ -40,6 +40,7 @@ public class CandidatoJPAController implements Serializable{
             em.persist(candidato);
             em.getTransaction().commit();
         }catch (Exception ex){
+            System.out.println(ex);
             if(encontrarCandidato(candidato.getIdCandidato()) != null){
                 throw new Exception("Candidato " + candidato + " já existente.",ex);
             }

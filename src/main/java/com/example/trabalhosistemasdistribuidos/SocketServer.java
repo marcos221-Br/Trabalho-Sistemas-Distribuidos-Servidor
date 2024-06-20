@@ -12,6 +12,7 @@ import com.example.trabalhosistemasdistribuidos.banco.CandidatoCompetenciaDAO;
 import com.example.trabalhosistemasdistribuidos.banco.CandidatoDAO;
 import com.example.trabalhosistemasdistribuidos.banco.CompetenciaDAO;
 import com.example.trabalhosistemasdistribuidos.banco.EmpresaDAO;
+import com.example.trabalhosistemasdistribuidos.banco.IpDAO;
 import com.example.trabalhosistemasdistribuidos.banco.TokenDAO;
 import com.example.trabalhosistemasdistribuidos.banco.VagaCompetenciaDAO;
 import com.example.trabalhosistemasdistribuidos.banco.VagaDAO;
@@ -21,7 +22,9 @@ import com.example.trabalhosistemasdistribuidos.modelo.Competencia;
 import com.example.trabalhosistemasdistribuidos.modelo.CompetenciaExperiencia;
 import com.example.trabalhosistemasdistribuidos.modelo.Empresa;
 import com.example.trabalhosistemasdistribuidos.modelo.Filtro;
+import com.example.trabalhosistemasdistribuidos.modelo.FiltroCandidato;
 import com.example.trabalhosistemasdistribuidos.modelo.FiltroVaga;
+import com.example.trabalhosistemasdistribuidos.modelo.Ips;
 import com.example.trabalhosistemasdistribuidos.modelo.LoginCandidato;
 import com.example.trabalhosistemasdistribuidos.modelo.LoginEmpresa;
 import com.example.trabalhosistemasdistribuidos.modelo.Tokens;
@@ -77,7 +80,17 @@ public class SocketServer{
                         VagaCompetenciaDAO jpaVagaCompetencia;
                         Filtro filtro;
                         FiltroVaga filtrovaga;
+                        FiltroCandidato filtroCandidato;
+                        Ips ipClass;
+                        IpDAO jpaIp;
                         ip = clienteSocket.getInetAddress().getHostAddress();
+                        jpaIp = new IpDAO();
+                        ipClass = new Ips(ip);
+                        try {
+                            jpaIp.cadastrar(ipClass);
+                        } catch (Exception e) {
+                            System.out.println("Erro ao adicionar IP ao banco");
+                        }
                         System.out.println("Conexão com: " + ip);
                         jsonRecebido = new ToJson();
                         try{
@@ -287,18 +300,6 @@ public class SocketServer{
                                             try{
                                                 candidato = new Candidato(jsonRecebido.getFuncao("email") + "", jsonRecebido.getFuncao("senha") + "");
                                                 candidato.setNome(jsonRecebido.getFuncao("nome") + "");
-                                                if(!(candidato.getEmail().contains("@")) || candidato.getEmail().length() < 7 || 
-                                                    candidato.getEmail().length() > 50 || candidato.getSenha().length()<3 || candidato.getSenha().length()>8 ||
-                                                    candidato.getNome().length() < 6 || candidato.getNome().length() > 30){
-                                                    throw new Exception();
-                                                }
-                                                int totalCandidato = 0;
-                                                for(Candidato candidatoFor : jpaCandidato.buscarTodos()){
-                                                    if(candidatoFor != null){
-                                                        totalCandidato = candidatoFor.getIdCandidato()+1;
-                                                    }
-                                                }
-                                                candidato.setIdCandidato(totalCandidato);
                                                 jpaCandidato.cadastrar(candidato);
                                                 String[] funcoes = {"status","token"};
                                                 tokenClass = new Tokens(token.createToken(candidato.getEmail()));
@@ -457,13 +458,6 @@ public class SocketServer{
                                                         empresa.getEmail().length() > 50 || empresa.getSenha().length()<3 || empresa.getSenha().length()>8){
                                                         throw new Exception();
                                                     }
-                                                    int totalEmpresa = 0;
-                                                    for(Empresa empresaFor : jpaEmpresa.buscarTodos()){
-                                                        if(empresaFor != null){
-                                                            totalEmpresa = empresaFor.getIdEmpresa()+1;
-                                                        }
-                                                    }
-                                                    empresa.setIdEmpresa(totalEmpresa);
                                                     jpaEmpresa.cadastrar(empresa);
                                                     String[] funcoes = {"status","token"};
                                                     tokenClass = new Tokens(token.createToken(empresa.getEmail()));
@@ -504,16 +498,10 @@ public class SocketServer{
                                                     for (int i = 0; i < ((JSONArray) jsonRecebido.getFuncao("competenciaExperiencia")).length(); i++) {
                                                         competencia = new Competencia(((JSONArray) jsonRecebido.getFuncao("competenciaExperiencia")).getJSONObject(i).getString("competencia"));
                                                         competencia = jpaCompetencia.buscarIdCompetencia(competencia);
-                                                        int totalCandidatoCompetencia = 0;
-                                                        for (CandidatoCompetencia candidatoCompetenciaId : jpaCandidatoCompetencia.buscarTodos()) {
-                                                            if(candidatoCompetenciaId != null){
-                                                                totalCandidatoCompetencia = candidatoCompetenciaId.getIdCandidatoCompetencia()+1;
-                                                            }
-                                                        }
                                                         if(jpaCandidatoCompetencia.buscarIdCandidatoCompetencia(new CandidatoCompetencia(candidato.getIdCandidato(),competencia.getIdCompetencia())) != null){
                                                             throw new EntityExistsException();
                                                         }
-                                                        candidatoCompetencia = new CandidatoCompetencia(totalCandidatoCompetencia, candidato.getIdCandidato(), competencia.getIdCompetencia(), 
+                                                        candidatoCompetencia = new CandidatoCompetencia(candidato.getIdCandidato(), competencia.getIdCompetencia(), 
                                                                                         ((JSONArray) jsonRecebido.getFuncao("competenciaExperiencia")).getJSONObject(i).getInt("experiencia"));
                                                         jpaCandidatoCompetencia.cadastrar(candidatoCompetencia);
                                                     }
@@ -704,26 +692,14 @@ public class SocketServer{
                                             empresa = jpaEmpresa.buscarIdEmpresa(empresa);
                                             if(empresa != null){
                                                 try{
-                                                    int totalVaga = 0;
-                                                    for (Vaga vagaId : jpaVaga.buscarTodos()) {
-                                                        if(vagaId != null){
-                                                            totalVaga = vagaId.getIdVaga()+1;
-                                                        }
-                                                    }
-                                                    vaga = new Vaga(totalVaga, empresa.getIdEmpresa(), Float.parseFloat(jsonRecebido.getFuncao("faixaSalarial")+""),
+                                                    vaga = new Vaga(empresa.getIdEmpresa(), Float.parseFloat(jsonRecebido.getFuncao("faixaSalarial")+""),
                                                                     jsonRecebido.getFuncao("descricao")+"", jsonRecebido.getFuncao("estado")+"",
                                                                     jsonRecebido.getFuncao("nome")+"");
                                                     jpaVaga.cadastrar(vaga);
                                                     for (int i = 0; i < ((JSONArray) jsonRecebido.getFuncao("competencias")).length(); i++) {
                                                         competencia = new Competencia(((JSONArray) jsonRecebido.getFuncao("competencias")).getString(i));
                                                         competencia = jpaCompetencia.buscarIdCompetencia(competencia);
-                                                        int totalVagaCompetencia = 0;
-                                                        for (VagaCompetencia vagaCompetenciaId : jpaVagaCompetencia.buscarTodos()) {
-                                                            if(vagaCompetenciaId != null){
-                                                                totalVagaCompetencia = vagaCompetenciaId.getIdVagaCompetencia()+1;
-                                                            }
-                                                        }
-                                                        vagaCompetencia = new VagaCompetencia(totalVagaCompetencia, vaga.getIdVaga(), competencia.getIdCompetencia());
+                                                        vagaCompetencia = new VagaCompetencia(vaga.getIdVaga(), competencia.getIdCompetencia());
                                                         jpaVagaCompetencia.cadastrar(vagaCompetencia);
                                                     }
                                                     String[] funcoes = {"mensagem"};
@@ -925,6 +901,7 @@ public class SocketServer{
                                                         }
                                                         if(contains == 0){
                                                             jpaVagaCompetencia.excluir(vagaCompetenciaFor);
+                                                            contains = 0;
                                                         }
                                                     }
                                                     for (int i = 0; i < ((JSONArray) jsonRecebido.getFuncao("competencias")).length(); i++) {
@@ -935,13 +912,7 @@ public class SocketServer{
                                                             }
                                                         }
                                                         if(contains == 0){
-                                                            int totalVagaCompetencia = 0;
-                                                            for (VagaCompetencia vagaCompetenciaId : jpaVagaCompetencia.buscarTodos()) {
-                                                                if(vagaCompetenciaId != null){
-                                                                    totalVagaCompetencia = vagaCompetenciaId.getIdVagaCompetencia()+1;
-                                                                }
-                                                            }
-                                                            jpaVagaCompetencia.cadastrar(new VagaCompetencia(totalVagaCompetencia, vaga.getIdVaga(), jpaCompetencia.buscarIdCompetencia(new Competencia(((JSONArray) jsonRecebido.getFuncao("competencias")).getString(i))).getIdCompetencia()));
+                                                            jpaVagaCompetencia.cadastrar(new VagaCompetencia(vaga.getIdVaga(), jpaCompetencia.buscarIdCompetencia(new Competencia(((JSONArray) jsonRecebido.getFuncao("competencias")).getString(i))).getIdCompetencia()));
                                                         }
                                                     }
                                                     String[] funcoes = {"mensagem"};
@@ -1044,7 +1015,7 @@ public class SocketServer{
                                         output.println(jsonEnviado.getJson());
                                         break;
                                     
-                                    /*case "filtrarCandidatos":
+                                    case "filtrarCandidatos":
                                         jpaToken = new TokenDAO();
                                         jpaCompetencia = new CompetenciaDAO();
                                         tokenClass = new Tokens(jsonRecebido.getFuncao("token") + "");
@@ -1055,56 +1026,61 @@ public class SocketServer{
                                         if(tokenClass != null){
                                             filtro = new Filtro(((JSONObject) jsonRecebido.getFuncao("filtros")).getString("tipo"));
                                             ArrayList<JSONObject> candidatoArray = new ArrayList<>();
-                                            for (int i = 0; i < ((JSONArray) ((JSONObject) jsonRecebido.getFuncao("filtros")).get("competencias")).length(); i++) {
-                                                filtro.setCompetencias(((JSONArray) ((JSONObject) jsonRecebido.getFuncao("filtros")).get("competencias")).getString(i));
+                                            for (int i = 0; i < ((JSONArray) ((JSONObject) jsonRecebido.getFuncao("filtros")).get("competenciasExperiencias")).length(); i++) {
+                                                filtro.setCompetencias(((JSONArray) ((JSONObject) jsonRecebido.getFuncao("filtros")).get("competenciasExperiencias")).getJSONObject(i).getString("competencia"));
+                                                filtro.setExperiencias((((JSONArray) ((JSONObject) jsonRecebido.getFuncao("filtros")).get("competenciasExperiencias")).getJSONObject(i).getInt("experiencia")));
                                             }
                                             for (String array : filtro.getCompetencias()) {
                                                 candidatoCompetencia = new CandidatoCompetencia();
                                                 candidatoCompetencia.setIdCompetencia(jpaCompetencia.buscarIdCompetencia(new Competencia(array)).getIdCompetencia());
+                                                int counter = 0;
                                                 for (CandidatoCompetencia candidatoCompetenciaFor : jpaCandidatoCompetencia.buscarCandidatoCompetenciaIdComeptencia(candidatoCompetencia)) {
-                                                    candidato = new Candidato();
-                                                    candidato.setIdCandidato(candidatoCompetenciaFor.getIdCandidato());
-                                                    filtrocandidato = new FiltroCandidato(jpaCandidato.buscar(candidato).getIdCandidato(),
-                                                                                jpaEmpresa.buscar(new Empresa(jpaVaga.buscar(vaga).getIdEmpresa())).getEmail(),
-                                                                                jpaVaga.buscar(vaga).getFaixaSalarial(), jpaVaga.buscar(vaga).getDescricao(),
-                                                                                jpaVaga.buscar(vaga).getEstado(), jpaVaga.buscar(vaga).getNome());
-                                                    for (VagaCompetencia competenciaNome : jpaVagaCompetencia.buscarVagaCompetenciaIdVagas(new VagaCompetencia(jpaVaga.buscar(vaga).getIdVaga()))) {
-                                                        filtrovaga.setCompetencias(jpaCompetencia.buscar(new Competencia(competenciaNome.getIdCompetencia())).getCompetencia());
-                                                    }
-                                                    if(filtro.getTipo().equalsIgnoreCase("OR")){
-                                                        if(vagaArray.isEmpty()){
-                                                            vagaArray.add(filtrovaga.getJson());
-                                                        }else{
-                                                            boolean have = false;
-                                                            for (int i = 0; i < vagaArray.size(); i++) {
-                                                                if(vagaArray.get(i).getInt("idVaga") == filtrovaga.getIdVaga()){
-                                                                    have = true;
-                                                                }
-                                                            }
-                                                            if(!have){
-                                                                vagaArray.add(filtrovaga.getJson());
-                                                            }
+                                                    if(candidatoCompetenciaFor.getTempo() >= filtro.getExperiencias().get(counter)){
+                                                        candidato = new Candidato();
+                                                        candidato.setIdCandidato(candidatoCompetenciaFor.getIdCandidato());
+                                                        filtroCandidato = new FiltroCandidato(jpaCandidato.buscar(candidato).getNome(),jpaCandidato.buscar(candidato).getEmail());
+                                                        for (CandidatoCompetencia forCandidatoCompetencia : jpaCandidatoCompetencia.buscarCompetenciasCandidato(candidato)) {
+                                                            filtroCandidato.setCompetenciasExperiencias(new CompetenciaExperiencia(
+                                                                                                        jpaCompetencia.buscar(
+                                                                                                        new Competencia(forCandidatoCompetencia.getIdCompetencia())).getCompetencia(),
+                                                                                                        forCandidatoCompetencia.getTempo()));
                                                         }
-                                                    }else{
-                                                        if(vagaArray.isEmpty() && filtrovaga.getCompetencias().containsAll(filtro.getCompetencias())){
-                                                            vagaArray.add(filtrovaga.getJson());
-                                                        }else{
-                                                            boolean have = false;
-                                                            for (int i = 0; i < vagaArray.size(); i++) {
-                                                                if(vagaArray.get(i).getInt("idVaga") == filtrovaga.getIdVaga()){
-                                                                    have = true;
+                                                        if(filtro.getTipo().equalsIgnoreCase("OR")){
+                                                            if(candidatoArray.isEmpty()){
+                                                                candidatoArray.add(filtroCandidato.getJson());
+                                                            }else{
+                                                                boolean have = false;
+                                                                for (int i = 0; i < candidatoArray.size(); i++) {
+                                                                    if(candidatoArray.get(i).getString("email").equals(filtroCandidato.getEmail())){
+                                                                        have = true;
+                                                                    }
+                                                                }
+                                                                if(!have){
+                                                                    candidatoArray.add(filtroCandidato.getJson());
                                                                 }
                                                             }
-                                                            if(!have && filtrovaga.getCompetencias().containsAll(filtro.getCompetencias())){
-                                                                vagaArray.add(filtrovaga.getJson());
+                                                        }else{
+                                                            if(candidatoArray.isEmpty() && filtroCandidato.getCompetencias().containsAll(filtro.getCompetencias())){
+                                                                candidatoArray.add(filtroCandidato.getJson());
+                                                            }else{
+                                                                boolean have = false;
+                                                                for (int i = 0; i < candidatoArray.size(); i++) {
+                                                                    if(candidatoArray.get(i).getString("email").equals(filtroCandidato.getEmail())){
+                                                                        have = true;
+                                                                    }
+                                                                }
+                                                                if(!have && filtroCandidato.getCompetencias().containsAll(filtro.getCompetencias())){
+                                                                    candidatoArray.add(filtroCandidato.getJson());
+                                                                }
                                                             }
                                                         }
                                                     }
                                                 }
+                                                counter++;
                                             }
                                             jsonEnviado = new ToJson(jsonRecebido.getOperacao());
                                             jsonEnviado.adicionarJson("status", 201);
-                                            jsonEnviado.adicionarJson("vagas", vagaArray);
+                                            jsonEnviado.adicionarJson("candidatos", candidatoArray);
                                         }else{
                                             String[] funcoes = {"mensagem"};
                                             String[] valores = {"Token inválido"};
@@ -1114,7 +1090,7 @@ public class SocketServer{
                                         }
                                         System.out.println("Envido: " + jsonEnviado.getJson() + " para " + ip);
                                         output.println(jsonEnviado.getJson());
-                                        break;*/
+                                        break;
 
                                     default:
                                         System.out.println("Enviado: Chave \"operacao\" incorreta");
@@ -1128,6 +1104,11 @@ public class SocketServer{
                             System.out.println("Usuário " + ip + " desconectado!");
                         }catch(IOException IOE){
                             System.err.println("Usuário " + ip + " enviou null!");
+                        }
+                        try {
+                            jpaIp.excluir(ipClass);
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }
                 };

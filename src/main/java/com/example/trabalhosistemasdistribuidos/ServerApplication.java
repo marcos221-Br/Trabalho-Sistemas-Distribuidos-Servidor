@@ -8,13 +8,10 @@ import javafx.scene.Parent;
 import java.io.IOException;
 
 public class ServerApplication extends Application {
-    @SuppressWarnings("unused")
-    private static Stage stage;
     private static Scene server;
 
     @Override
     public void start(@SuppressWarnings("exports") Stage primaryStage) throws IOException {
-        stage = primaryStage;
         primaryStage.setTitle("Portal de Vagas - Servidor");
 
         Parent fxmlServer = FXMLLoader.load(getClass().getResource("Server.fxml"));
@@ -22,10 +19,6 @@ public class ServerApplication extends Application {
 
         primaryStage.setScene(server);
         primaryStage.show();
-    }
-
-    public static void escreverLog(String texto){ // Realiza a escrita no log
-        System.out.println(texto);
     }
 
     public static void main(String[] args) {

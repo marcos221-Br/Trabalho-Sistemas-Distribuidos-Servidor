@@ -10,7 +10,6 @@ import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaQuery;
 
 import com.example.trabalhosistemasdistribuidos.modelo.CandidatoCompetencia;
-import com.example.trabalhosistemasdistribuidos.modelo.VagaCompetencia;
 
 public class CandidatoCompetenciaJPAController implements Serializable{
     

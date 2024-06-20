@@ -4,6 +4,8 @@ import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -20,6 +22,7 @@ public class VagaCompetencia implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
     @Column(name = "idVagaCompetencia")
     private Integer idVagaCompetencia;
@@ -27,12 +30,6 @@ public class VagaCompetencia implements Serializable {
     private Integer idVaga;
     @Column(name = "idCompetencia")
     private Integer idCompetencia;
-
-    public VagaCompetencia(Integer idVagaCompetencia, Integer idVaga, Integer idCompetencia){
-        this.idVagaCompetencia = idVagaCompetencia;
-        this.idVaga = idVaga;
-        this.idCompetencia = idCompetencia;
-    }
 
     public VagaCompetencia(Integer idVaga, Integer idCompetencia) {
         this.idVaga = idVaga;

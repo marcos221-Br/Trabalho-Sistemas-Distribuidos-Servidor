@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.example.trabalhosistemasdistribuidos.modelo.Candidato;
 import com.example.trabalhosistemasdistribuidos.modelo.CandidatoCompetencia;
-import com.example.trabalhosistemasdistribuidos.modelo.VagaCompetencia;
 
 public class CandidatoCompetenciaDAO extends AbstrataDAO<CandidatoCompetenciaJPAController, CandidatoCompetencia>{
     
