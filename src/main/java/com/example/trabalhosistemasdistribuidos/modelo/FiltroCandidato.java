@@ -5,11 +5,13 @@ import java.util.ArrayList;
 import org.json.JSONObject;
 
 public class FiltroCandidato {
+    private Integer idCandidato;
     private String nome;
     private String email;
     private ArrayList<CompetenciaExperiencia> competenciasExperiencias;
 
-    public FiltroCandidato(String nome, String email){
+    public FiltroCandidato(Integer idCandidato, String nome, String email){
+        this.idCandidato = idCandidato;
         this.nome = nome;
         this.email = email;
         this.competenciasExperiencias = new ArrayList<>();
@@ -17,6 +19,10 @@ public class FiltroCandidato {
 
     public String getEmail(){
         return this.email;
+    }
+
+    public Integer getIdCandidato(){
+        return this.idCandidato;
     }
 
     public ArrayList<String> getCompetencias(){
@@ -33,6 +39,7 @@ public class FiltroCandidato {
 
     public JSONObject getJson(){
         JSONObject json = new JSONObject();
+        json.put("idCandidato",idCandidato);
         json.put("nome",nome);
         json.put("email",email);
         json.put("competenciasExperiencias",competenciasExperiencias);
