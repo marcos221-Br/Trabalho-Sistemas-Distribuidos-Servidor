@@ -1182,12 +1182,16 @@ public class SocketServer{
                                         jpaCandidato = new CandidatoDAO();
                                         jpaEmpresa = new EmpresaDAO();
                                         jpaMensagem = new MensagemDAO();
-                                        ArrayList<String> empresas = new ArrayList<>();
+                                        ArrayList<JSONObject> empresas = new ArrayList<>();
                                         if(tokenClass != null){
                                             try{
                                                 candidato = jpaCandidato.buscarIdCandidato(new Candidato(jsonRecebido.getFuncao("email")+""));
                                                 for (Mensagem mensagemFor : jpaMensagem.buscarMensagensCandidato(new Mensagem(candidato.getIdCandidato()))) {
-                                                    empresas.add(jpaEmpresa.buscar(new Empresa(mensagemFor.getIdEmpresa())).getRazaoSocial());
+                                                    JSONObject jsonObject = new JSONObject();
+                                                    jsonObject.put("nome", jpaEmpresa.buscar(new Empresa(mensagemFor.getIdEmpresa())).getRazaoSocial());
+                                                    jsonObject.put("email", jpaEmpresa.buscar(new Empresa(mensagemFor.getIdEmpresa())).getEmail());
+                                                    jsonObject.put("ramo", jpaEmpresa.buscar(new Empresa(mensagemFor.getIdEmpresa())).getRamo());
+                                                    empresas.add(jsonObject);
                                                 }
                                                 jsonEnviado = new ToJson(jsonRecebido.getOperacao());
                                                 jsonEnviado.adicionarJson("empresas",empresas);
