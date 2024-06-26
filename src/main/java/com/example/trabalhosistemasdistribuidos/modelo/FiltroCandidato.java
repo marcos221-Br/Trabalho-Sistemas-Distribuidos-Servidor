@@ -42,7 +42,7 @@ public class FiltroCandidato {
         json.put("idCandidato",idCandidato);
         json.put("nome",nome);
         json.put("email",email);
-        json.put("competenciasExperiencias",competenciasExperiencias);
+        json.put("competenciaExperiencia",competenciasExperiencias);
         return json;
     }
 
